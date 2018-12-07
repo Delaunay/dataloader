@@ -1,6 +1,8 @@
+#if __has_include(<turbojpeg.h>)
 #include "jpeg_loader.h"
-
 #include <turbojpeg.h>
+
+
 #include <iostream>
 #include <cstdio>
 
@@ -64,3 +66,4 @@ TurboJPEGBuffer decompress(std::string& jpegBuf,int width,int height){
     tjDestroy(_decompress);
     return output;
 }
+#endif

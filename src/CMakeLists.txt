@@ -21,7 +21,9 @@ SET(DATALOADER_SRC
     io.cpp
 )
 
+find_package(Torch)
 find_package(TurboJPEG)
+
 include_directories(${TurboJPEG_INCLUDE_DIRS})
 
 # main library (prevent recompilation when building tests)
