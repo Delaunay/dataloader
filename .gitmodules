@@ -1,0 +1,3 @@
+[submodule "dependencies/libsquash"]
+	path = dependencies/libsquash
+	url = https://github.com/pmq20/libsquash.git

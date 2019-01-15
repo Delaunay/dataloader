@@ -1,7 +1,8 @@
 #ifndef DATALOADER_IMAGE_FOLDER_HEADER_H
 #define DATALOADER_IMAGE_FOLDER_HEADER_H
 
-#include <filesystem>
+#include "ffilesystem.h"
+
 #include <unordered_map>
 #include <tuple>
 #include <vector>
@@ -17,12 +18,13 @@ public:
 
     ImageFolder(std::string const& folder_name, Loader& loader, bool verbose=true);
 
-    int const get_item(int index) const{
-        return loader(_images[index]);
+    int get_item(int index) const{
+        assert(index >= 0 && "image index  should be >= 0");
+        return loader(_images[int(index)]);
     }
 
     int size() const {
-        return _images.size();
+        return int(_images.size());
     }
 
     std::vector<std::tuple<Path, int, std::size_t>> const& samples() const {

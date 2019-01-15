@@ -47,9 +47,9 @@ public:
     }*/
 
     ImageFolder const& dataset;
-    int const batch_size;
+    std::size_t const batch_size;
     int const seed;
-    int const buffering;
+    std::size_t const buffering;
 
 private:
     using Buffer = std::vector<char>;

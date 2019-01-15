@@ -1,6 +1,7 @@
 #include "dataset.h"
 #include "utils.h"
 
+#include <string>
 #include <iostream>
 
 
@@ -18,18 +19,20 @@ ImageFolder::ImageFolder(std::string const& folder_name, ImageFolder::Loader& lo
     }
 }
 
+
+
 void ImageFolder::find_all_images(ImageFolder::Path const& folder_name, int class_index){
     namespace fs = std::filesystem;
 
     for(fs::directory_entry const& entry: fs::directory_iterator(folder_name)){
-        if (entry.is_directory()){
-            int index = _classes_to_index.size();
+        if (is_directory(entry)){
+            int index = int(_classes_to_index.size());
 
             _classes_to_index[entry.path().string()] = index;
             find_all_images(entry, index);
 
-        } else if (entry.is_regular_file() && class_index != -1) {
-            _images.emplace_back(entry, class_index, entry.file_size());
+        } else if (is_regular_file(entry) && class_index != -1) {
+            _images.emplace_back(entry, class_index, file_size(entry));
         } else {
             std::cout << entry << " has no class skipping..." << std::endl;
         }

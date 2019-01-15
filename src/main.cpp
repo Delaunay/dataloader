@@ -19,7 +19,7 @@ int main(){
         std::cout << path << " " << label << " " << size << std::endl;
 
         TimeIt read_time;
-        std::string buffer = load_file(path, size);
+        auto buffer = load_file(path, size);
 
         total += read_time.stop();
         count += 1;

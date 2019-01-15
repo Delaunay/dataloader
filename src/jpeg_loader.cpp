@@ -2,15 +2,30 @@
 #include "jpeg_loader.h"
 #include <turbojpeg.h>
 
-
+#include <vector>
 #include <iostream>
 #include <cstdio>
 
 #define ERROR(msg) std::cout << msg << std::endl
 
 
-int decompress(std::pair<std::string, int> const data){
+int decompress(std::pair<std::vector<unsigned char>, int> data){
+    const int COLOR_COMPONENTS = 3;
+    long unsigned int _jpegSize = data.first.size();
 
+    int jpegSubsamp, width, height;
+
+    tjhandle _jpegDecompressor = tjInitDecompress();
+
+    tjDecompressHeader2(_jpegDecompressor, &data.first[0], _jpegSize, &width, &height, &jpegSubsamp);
+
+    std::vector<unsigned char> buffer(std::size_t(width * height * COLOR_COMPONENTS));
+
+    tjDecompress2(_jpegDecompressor, data.first.data(), _jpegSize, &buffer[0], width, 0/*pitch*/, height, TJPF_RGB, TJFLAG_FASTDCT);
+
+    tjDestroy(_jpegDecompressor);
+
+    return 1;
 }
 
 struct TurboJpegConfiguration{

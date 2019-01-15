@@ -11,6 +11,7 @@ SET(DATALOADER_HDS
     utils.h
     dataloader.h
     dataset.h
+    ffilesystem.h
 )
 
 SET(DATALOADER_SRC
@@ -19,16 +20,27 @@ SET(DATALOADER_SRC
     dataloader.cpp
     dataset.cpp
     io.cpp
+    ffilesystem.cpp
 )
 
-find_package(Torch)
+#find_package(Torch)
 find_package(TurboJPEG)
+find_package(Boost COMPONENTS filesystem)
 
 include_directories(${TurboJPEG_INCLUDE_DIRS})
 
+
+set(FILESYSTEM_LIB
+    ${Boost_FILESYSTEM_LIBRARY}
+    ${Boost_SYSTEM_LIBRARY}
+    #  stdc++fs
+)
+
+
+
 # main library (prevent recompilation when building tests)
 ADD_LIBRARY(dataloader ${DATALOADER_HDS} ${DATALOADER_SRC})
-TARGET_LINK_LIBRARIES(dataloader stdc++fs ${TurboJPEG_LIBRARIES})
+TARGET_LINK_LIBRARIES(dataloader ${FILESYSTEM_LIB} ${TurboJPEG_LIBRARIES})
 SET_PROPERTY(TARGET dataloader PROPERTY CXX_STANDARD 17)
 
 
@@ -40,9 +52,9 @@ TARGET_LINK_LIBRARIES(main stdc++fs ${TurboJPEG_LIBRARIES} dataloader)
 SET_PROPERTY(TARGET main PROPERTY CXX_STANDARD 17)
 
 ADD_EXECUTABLE(io_benchmark io_benchmark.cpp)
-TARGET_LINK_LIBRARIES(io_benchmark stdc++fs ${TurboJPEG_LIBRARIES} dataloader)
+TARGET_LINK_LIBRARIES(io_benchmark ${FILESYSTEM_LIB} ${TurboJPEG_LIBRARIES} dataloader)
 SET_PROPERTY(TARGET io_benchmark PROPERTY CXX_STANDARD 17)
 
-
+ 
 
 
