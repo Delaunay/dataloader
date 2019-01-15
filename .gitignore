@@ -32,7 +32,6 @@ Makefile*
 /old/
 */.idea/*
 *.autosave
-dependencies/
 dependencies/SDL/
 dependencies/SDL_ttf/
 .idea/
