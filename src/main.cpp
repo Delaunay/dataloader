@@ -2,7 +2,6 @@
 #include "dataset.h"
 #include "dataloader.h"
 #include "utils.h"
-#include "jpeg_loader.h"
 
 #include <iostream>
 

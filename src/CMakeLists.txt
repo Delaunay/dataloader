@@ -7,20 +7,23 @@ INCLUDE_DIRECTORIES(.)
 
 SET(DATALOADER_HDS
     io.h
-    jpeg_loader.h
     utils.h
     dataloader.h
     dataset.h
     ffilesystem.h
+    jpeg.h
+    runtime.h
+    image.h
 )
 
 SET(DATALOADER_SRC
-    jpeg_loader.cpp
     utils.cpp
     dataloader.cpp
     dataset.cpp
     io.cpp
     ffilesystem.cpp
+    jpeg.cpp
+    image.cpp
 )
 
 #find_package(Torch)
