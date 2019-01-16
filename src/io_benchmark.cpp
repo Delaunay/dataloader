@@ -36,7 +36,7 @@ int main(int argc, const char* argv[]){
         }
     }
 
-    std::function<int(std::tuple<Path, int, std::size_t> const& item)> bench_fun = [&](std::tuple<Path, int, std::size_t> const& item){
+    std::function<int(std::tuple<Path, int, std::size_t> const& item)> loader = [&](std::tuple<Path, int, std::size_t> const& item){
 
         Path path; int label; std::size_t size;
         std::tie(path, label, size) = item;
@@ -69,12 +69,13 @@ int main(int argc, const char* argv[]){
         RuntimeStats::stat().increment_count();
 
         //img.save_ppm("after_scaling.ppm");
+        // img.save_jpeg("after_scaling.jpeg");
 
         return 0;
     };
 
     try{
-        ImageFolder dataset(data_loc, bench_fun);
+        ImageFolder dataset(data_loc, loader);
         DataLoader dataloader(dataset, 1, 1, seed);
 
         TimeIt loop_time;

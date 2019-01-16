@@ -46,3 +46,21 @@ void Image::save_ppm(const char* name){
     }
     fclose(fd);
 }
+
+
+void Image::save_jpeg(const char* name, int flag){
+    tjhandle comp = tjInitCompress();
+
+    std::vector<unsigned char> buffer(_image.size());
+    unsigned char* buffers[1];
+    buffers[0] = buffer.data();
+
+    std::size_t size = _image.size();
+
+    tjCompress2(comp, _image.data(), width(), 0, height(), TJPF_RGB, buffers, &size, TJSAMP_444, 75, flag);
+    tjDestroy(comp);
+
+    FILE* fd = fopen(name, "w");
+    fwrite(buffer.data(), sizeof(unsigned char), size, fd);
+    fclose(fd);
+}

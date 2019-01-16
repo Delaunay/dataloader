@@ -2,6 +2,7 @@
 #define DATALOADER_IMAGE_HEADER_H
 
 #include <vector>
+#include <turbojpeg.h>
 
 class Image{
 public:
@@ -15,7 +16,10 @@ public:
 
 
     Image& inplace_scale(int nw, int nh);
+
     void save_ppm(const char* name);
+
+    void save_jpeg(const char* name, int flag = TJFLAG_FASTDCT);
 
 private:
     std::vector<unsigned char> _image;
