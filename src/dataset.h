@@ -9,6 +9,8 @@
 #include <string>
 #include <functional>
 
+#include <cassert>
+
 // Mirror Pytorch ImageFolder
 // except it does not do the transformation this should be done in the loader
 class ImageFolder{
@@ -19,7 +21,7 @@ public:
     ImageFolder(std::string const& folder_name, Loader& loader, bool verbose=true);
 
     int get_item(int index) const{
-        assert(index >= 0 && "image index  should be >= 0");
+        assert(index >= 0  && index < _images.size() && "image index  should be >= 0");
         return loader(_images[int(index)]);
     }
 

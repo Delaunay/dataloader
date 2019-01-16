@@ -33,7 +33,7 @@ include_directories(${TurboJPEG_INCLUDE_DIRS})
 set(FILESYSTEM_LIB
     ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
-    #  stdc++fs
+    stdc++fs
 )
 
 

@@ -3,8 +3,10 @@
 
 #if defined(__has_include)
 #   if __has_include(<filesystem>)
+#       define USE_STD_FS
 #       include <filesystem>
 #   else
+#       define USE_BOOST_FS
 #       include <boost/filesystem.hpp>
         namespace std{
             namespace filesystem = boost::filesystem;

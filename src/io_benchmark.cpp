@@ -7,6 +7,7 @@
 #include <ctime>
 #include <sstream>
 #include <cstdio>
+#include <cstring>
 
 using Path = ImageFolder::Path;
 
@@ -38,11 +39,11 @@ std::vector<unsigned char> scale(std::vector<unsigned char> data, int ow, int oh
 
     for (int j = 0; j < nh; ++j){
         for (int i = 0; i < nw; ++i){
-            int x = int(i * wratio);
-            int y = int(j * hratio);
+            int x = j * hratio;
+            int y = i * wratio;
 
             std::size_t pixel = std::size_t(j * (nw * 3) + i * 3);
-            std::size_t old_pix = std::size_t(y * (ow * 3) + x * 3);
+            std::size_t old_pix = std::size_t(x * (ow * 3.f) + y * 3.f);
 
             buffer[pixel + 0] = data[old_pix + 0];
             buffer[pixel + 1] = data[old_pix + 1];
@@ -56,21 +57,15 @@ std::vector<unsigned char> scale(std::vector<unsigned char> data, int ow, int oh
 static double total_scaling_time = 0;
 static int total_raw_decode_size = 0;
 
-std::vector<unsigned char> decompress(std::vector<unsigned char> data){
+std::vector<unsigned char> transform(std::vector<unsigned char>& data, int width, int height){
     const int COLOR_COMPONENTS = 3;
-    long unsigned int _jpegSize = data.size();
-
-    int jpegSubsamp, width, height;
-
-    tjhandle _jpegDecompressor = tjInitDecompress();
-    tjDecompressHeader2(_jpegDecompressor, &data[0], _jpegSize, &width, &height, &jpegSubsamp);
 
     tjtransform xform;
     memset(&xform, 0, sizeof(tjtransform));
     // xform.op = TJXOP_VFLIP;
-    // xform.op = TJXOP_HFLIP;
+    xform.op = TJXOP_HFLIP;
     // xform.options |= TJXOPT_GRAY;
-    // xform.op = TJXOP_TRANSPOSE;
+    //xform.op = TJXOP_TRANSPOSE;
     // xform.op = TJXOP_TRANSVERSE;
     // xform.op = TJXOP_ROT90;
     // xform.op = TJXOP_ROT180;
@@ -78,26 +73,47 @@ std::vector<unsigned char> decompress(std::vector<unsigned char> data){
     // xform.options |= TJXOPT_CROP;
     // flags |= TJFLAG_FASTUPSAMPLE;
 
-    // Transform the jpeg directly
-    // tjhandle tjInstance = tjInitTransform();
-    // tjTransform(tjInstance, jpegBuf, jpegSize, 1, &dstBuf, &dstSize, &xform, flags)
 
+    // Transform the jpeg directly
+    std::vector<unsigned char> transform_buffer(std::size_t(width * height * COLOR_COMPONENTS), 0);
+
+    unsigned char * transform_buffers[1];
+    transform_buffers[0] = transform_buffer.data();
+    std::size_t dstSize = 0;
+
+    tjhandle tjInstance = tjInitTransform();
+    tjTransform(tjInstance, data.data(), data.size(), 1, transform_buffers, &dstSize, &xform, TJFLAG_NOREALLOC);
+
+    tjDestroy(tjInstance);
+    return transform_buffer;
+}
+
+std::vector<unsigned char> decompress(std::vector<unsigned char> data){
+    tjhandle decompressor = tjInitDecompress();
+
+    int jpegSubsamp, width, height;
+    tjDecompressHeader2(decompressor, data.data(), data.size(), &width, &height, &jpegSubsamp);
+
+    // Transform
+    data = transform(data, width, height);
+
+    // Decode
+    std::vector<unsigned char> image(std::size_t(width * height * 3));
+
+    tjDecompress2(decompressor, data.data(), data.size(), image.data(), width, 0, height, TJPF_RGB, TJFLAG_FASTDCT | TJFLAG_NOREALLOC);
+
+    total_raw_decode_size += image.size();
+
+    // Scaling
     int target_width = 256;
     int target_height = 256;
 
-    std::vector<unsigned char> buffer(std::size_t(width * height * COLOR_COMPONENTS));
-
-    tjDecompress2(_jpegDecompressor, data.data(), _jpegSize, &buffer[0], width, 0, height, TJPF_RGB, TJFLAG_FASTDCT);
-
-    total_raw_decode_size += buffer.size();
-
     TimeIt scaling_time;
-    buffer = scale(buffer, width, height, target_width, target_height);
+    data = scale(image, width, height, target_width, target_height);
     total_scaling_time += scaling_time.stop();
 
-    tjDestroy(_jpegDecompressor);
-
-    return buffer;
+    tjDestroy(decompressor);
+    return data;
 }
 
 int main(int argc, const char* argv[]){
@@ -109,7 +125,8 @@ int main(int argc, const char* argv[]){
 
     int seed = int(time(nullptr));
 
-    const char* data_loc = "/home/user1/test_database/imgnet/ImageNet2012_jpeg/train/";
+    //const char* data_loc = "/home/user1/test_database/imgnet/ImageNet2012_jpeg/train/";
+    const char* data_loc = "/media/setepenre/UserData/tmp/jpeg";
 
     for(int i = 0; i < argc; ++i){
         std::string arg = std::string(argv[i]);
@@ -144,6 +161,8 @@ int main(int argc, const char* argv[]){
         count_image += 1;
         total_read_size += size;
         total_decode_size += image.size();
+
+        save_buffer_ppm("last.ppm", image, 256, 256);
 
         return 0;
     };

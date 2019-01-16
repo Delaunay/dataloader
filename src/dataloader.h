@@ -24,7 +24,7 @@ public:
     }
 
     int get_next_item(){
-        return dataset.get_item(prng(prng_engine));
+        return dataset.get_item(std::max(prng(prng_engine) - 1, 0));
     }
 
     Sample load_sample(Path const& path, int label){
