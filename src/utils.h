@@ -17,6 +17,16 @@ class TimeIt {
             std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
         return time_span.count();
     }
+
+    TimeIt operator=(TimeIt p){
+        return TimeIt(p);
+    }
+
+    TimeIt(const TimeIt& p):
+        start(p.start)
+    {}
+
+    TimeIt() = default;
 };
 
 struct StatStream {

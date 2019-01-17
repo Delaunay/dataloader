@@ -15,6 +15,7 @@ SET(DATALOADER_HDS
     runtime.h
     image.h
     buffer.h
+    pool.h
 )
 
 SET(DATALOADER_SRC
@@ -26,6 +27,7 @@ SET(DATALOADER_SRC
     jpeg.cpp
     image.cpp
     buffer.cpp
+    pool.cpp
 )
 
 #find_package(Torch)
@@ -61,10 +63,13 @@ ADD_EXECUTABLE(io_benchmark io_benchmark.cpp)
 TARGET_LINK_LIBRARIES(io_benchmark ${FILESYSTEM_LIB} ${TurboJPEG_LIBRARIES} dataloader)
 SET_PROPERTY(TARGET io_benchmark PROPERTY CXX_STANDARD 17)
 
-
 ADD_EXECUTABLE(test_buffer test_buffer.cpp)
 TARGET_LINK_LIBRARIES(test_buffer ${FILESYSTEM_LIB} ${TurboJPEG_LIBRARIES} dataloader)
 SET_PROPERTY(TARGET test_buffer PROPERTY CXX_STANDARD 17)
+
+ADD_EXECUTABLE(test_pool test_pool.cpp)
+TARGET_LINK_LIBRARIES(test_pool ${FILESYSTEM_LIB} ${TurboJPEG_LIBRARIES} dataloader)
+SET_PROPERTY(TARGET test_pool PROPERTY CXX_STANDARD 17)
 
  
 

@@ -10,10 +10,10 @@ void test(RingBuffer<int>& buf){
     for(int i = 0; i < 100; ++i){
         buf.push(i);
 
-        Option<int> const& val = buf.pop();
+        int val = buf.pop();
 
-        if (!val.is_empty()){
-            printf("%d ", val.get());
+        if (val != 0){
+            printf("%d ", (val));
         }
     }
 
@@ -32,10 +32,10 @@ void test(RingBuffer<int>& buf){
     buf.report();
 
     for(int i = 0; i < 100; ++i){
-        Option<int> const& val = buf.pop();
+       int val = buf.pop();
 
-        if (!val.is_empty()){
-            printf("%d ", val.get());
+        if (val != 0){
+            printf("%d ", val);
         } else {
             printf("f ");
         }
@@ -57,10 +57,10 @@ void insert(RingBuffer<int>& buf){
 
 void remove(RingBuffer<int>& buf){
     for(int i = 0; i < 400; ++i){
-        Option<int> const& val = buf.pop();
+        int val = buf.pop();
 
-        if (!val.is_empty()){
-            printf("%d ", val.get());
+        if (val != 0){
+            printf("%d ", val);
         } else {
             printf("f ");
         }
@@ -69,7 +69,7 @@ void remove(RingBuffer<int>& buf){
 
 int main(){
     //*
-    RingBuffer<int> buf(10);
+    RingBuffer<int> buf(10, [](){ return 0; });
     std::vector<std::future<void>> data(2000);
 
     for (int k = 0; k < 2000; ++k){
@@ -82,7 +82,7 @@ int main(){
     }
     //*/
 
-    RingBuffer<int> buf2(50);
+    RingBuffer<int> buf2(50, [](){ return 0; });
 
     printf("\n------------------\n");
     std::future<void> inserter  = std::async([&](){ return insert(buf2); });

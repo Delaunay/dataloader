@@ -1,59 +1,105 @@
 #ifndef DATALOADER_BUFFER_HEADER_H
 #define DATALOADER_BUFFER_HEADER_H
 
+#include <functional>
 #include <thread>
 #include <mutex>
 #include <vector>
+#include <variant>
 
+/*
 template<typename T>
 class Option{
+private:
+    struct RefWrapper{
+        T v;
+
+        // Implicit conversion from RefWrapper to T
+        operator T(){
+            return v;
+        }
+    };
+
+    using internal_value_type = typename std::conditional<std::is_reference<T>::value, RefWrapper, T>::type;
 public:
+
     Option():
-        empty(true)
-    {
-        data.b = dummy();
-    }
+        data(dummy()), empty(true)
+    {}
 
+    / *
     Option(T const& val):
-        empty(false)
-    {
-        data.a = val;
+        data(val), empty(false)
+    {}* /
+
+    Option(T const&& val):
+        data(std::move(val)), empty(false)
+    { }
+
+    ~Option(){
     }
 
-    bool is_empty() const {    return empty; }
+    bool is_empty() const {    return data.index() != 0; }
 
-    T const& get() const {    return data.a; }
+    T&       get()       {    return std::get<0>(data); }
+    T const& get() const {    return std::get<0>(data); }
 
 private:
     struct dummy{};
 
-    union {
-        T a;
+    / *
+    union variant {
+        struct { T a; } wrap;
         dummy b;
-    } data;
+
+        variant() {}
+
+        ~variant(){}
+    };
+    variant data;
+    * /
+
+    std::variant<internal_value_type, dummy> data;
+
 
     bool empty;
 };
-
 template<typename T>
-Option<T> some(T const& val){
-    return Option<T>(val);
+std::optional<T> some(T&& val){
+    return std::optional<T>(val);
 }
 
 template<typename T>
-Option<T> none(){
-    return Option<T>();
+std::optional<T> none(){
+    return std::optional<T>();
 }
+*/
+
+
 
 template<typename T>
 class RingBuffer{
 public:
-    RingBuffer(std::size_t size){
+    //using value_type = std::<T>;
+    RingBuffer(std::size_t size, std::function<T()> init = T()){
         _buffer.reserve(size);
 
         for(int i = 0; i < size; ++i){
-            _buffer.push_back(0);
+            _buffer.push_back(init());
         }
+    }
+
+    template<typename... Args>
+    T emplace_back(Args&&... args){
+        std::lock_guard lock(mutex);
+
+        if (size() < _buffer.size()){
+            _buffer[end % _buffer.size()] = T(std::forward<Args>(args)...);
+            T val = _buffer[end % _buffer.size()];
+            end += 1;
+            return val;
+        }
+        return nullptr;
     }
 
     bool push(T const& val){
@@ -67,19 +113,23 @@ public:
         return false;
     }
 
-    Option<T> pop(){
+    T pop(){
         std::lock_guard lock(mutex);
 
         if (size() > 0){
-            auto val = _buffer[start % _buffer.size()];
+            T val = _buffer[start % _buffer.size()];
             start += 1;
-            return some(val);
+            return val;
         }
-        return none<T>();
+        return T();
     }
 
     std::size_t size() const {
         return end - start;
+    }
+
+    bool full() const {
+        return size() == _buffer.size();
     }
 
     void report(){
