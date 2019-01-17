@@ -14,6 +14,7 @@ SET(DATALOADER_HDS
     jpeg.h
     runtime.h
     image.h
+    buffer.h
 )
 
 SET(DATALOADER_SRC
@@ -24,6 +25,7 @@ SET(DATALOADER_SRC
     ffilesystem.cpp
     jpeg.cpp
     image.cpp
+    buffer.cpp
 )
 
 #find_package(Torch)
@@ -37,6 +39,7 @@ set(FILESYSTEM_LIB
     ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
     stdc++fs
+    pthread
 )
 
 
@@ -57,6 +60,11 @@ SET_PROPERTY(TARGET main PROPERTY CXX_STANDARD 17)
 ADD_EXECUTABLE(io_benchmark io_benchmark.cpp)
 TARGET_LINK_LIBRARIES(io_benchmark ${FILESYSTEM_LIB} ${TurboJPEG_LIBRARIES} dataloader)
 SET_PROPERTY(TARGET io_benchmark PROPERTY CXX_STANDARD 17)
+
+
+ADD_EXECUTABLE(test_buffer test_buffer.cpp)
+TARGET_LINK_LIBRARIES(test_buffer ${FILESYSTEM_LIB} ${TurboJPEG_LIBRARIES} dataloader)
+SET_PROPERTY(TARGET test_buffer PROPERTY CXX_STANDARD 17)
 
  
 
