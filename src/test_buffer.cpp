@@ -69,7 +69,7 @@ void remove(RingBuffer<int>& buf){
 
 int main(){
     //*
-    RingBuffer<int> buf(10, [](){ return 0; });
+    RingBuffer<int> buf(10);
     std::vector<std::future<void>> data(2000);
 
     for (int k = 0; k < 2000; ++k){
@@ -82,7 +82,7 @@ int main(){
     }
     //*/
 
-    RingBuffer<int> buf2(50, [](){ return 0; });
+    RingBuffer<int> buf2(50);
 
     printf("\n------------------\n");
     std::future<void> inserter  = std::async([&](){ return insert(buf2); });

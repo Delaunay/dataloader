@@ -1,8 +1,11 @@
 
 #include "pool.h"
 
+#include <sstream>
 
-float sum(std::vector<float> const* v){
+typedef float Float;
+
+float sum(std::vector<Float> const* v){
     float s = 0;
     for(auto f : (*v)){
         s += f;
@@ -10,15 +13,58 @@ float sum(std::vector<float> const* v){
     return s;
 }
 
-int main(){
-    ThreadPool<std::vector<float> const*, float> pool(12, 100);
+int main(int argc, const char* argv[]){
+    std::size_t vector_size = 100000000;
+    std::size_t queue_size = 100;
+    std::size_t worker_size = 10;
+    std::size_t request_count = 200;
 
-    std::vector<float> vec(100000, 2.0);
-    std::vector<std::optional<std::future<float>>> results;
+    for(int i = 0; i < argc; ++i){
+        std::string arg = std::string(argv[i]);
+        if ("-vs" == arg) {
+            std::stringstream ss(argv[i + 1]);
+            ss >> vector_size;
+        }
+        if ("-qs" == arg) {
+            std::stringstream ss(argv[i + 1]);
+            ss >> queue_size;
+        }
+        if ("-ws" == arg){
+            std::stringstream ss(argv[i + 1]);
+            ss >> worker_size;
+        }
+        if ("-rc" == arg){
+            std::stringstream ss(argv[i + 1]);
+            ss >> request_count;
+        }
+        if ("-h" == arg){
+            printf("Usage:\n"
+                   "    -vs: vector size\n"
+                   "    -qs: task queue size\n"
+                   "    -ws: worker size\n"
+                   "    -rc: request Count\n"
+                   "    -h : this help message\n"
+                   "\n"
+                   "    Compute `rc` sums of `vs` floats using `ws` workers with a task queue size of `qs`\n");
+            return 0;
+        }
+    }
 
-    for(int i = 0; i < 200; ++i){
+    printf(
+        "        Vector size: %lu\n"
+        "    Task queue size: %lu\n"
+        "      Worker  count: %lu\n"
+        "      Request count: %lu\n", vector_size, queue_size, worker_size, request_count
+    );
+
+    ThreadPool<std::vector<Float> const*, Float> pool(worker_size, queue_size);
+
+    std::vector<Float> vec(vector_size, 2.0);
+    std::vector<std::optional<std::shared_future<Float>>> results;
+
+    for(int i = 0; i < request_count; ++i){
         while (pool.is_full()){
-            std::this_thread::sleep_for(std::chrono::milliseconds(250));
+            std::this_thread::sleep_for(std::chrono::milliseconds(25));
         }
 
         results.push_back(pool.insert_task(&vec, sum));
@@ -27,10 +73,10 @@ int main(){
     for(auto& val : results){
         if (val.has_value()){
             val.value().wait();
-            float f = val.value().get();
-            printf("%.4f ", f);
+            Float f = val.value().get();
+            // printf("%.4f ", f);
         } else{
-            printf("Error ");
+            // printf("Error ");
         }
     }
     printf("\n");

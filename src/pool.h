@@ -46,14 +46,18 @@ public:
 
         was_empty = true;
         empty_queue = TimeIt();
+        run_time = TimeIt();
     }
 
     /**
      *  Insert a request inside the TaskQueue and return a `some(future<Output>)`
      *  If the queue is full `none()` is returned
      */
-    std::optional<std::future<Output>> insert_task(Input const& in, FunctionCall const& work){
+    std::optional<std::shared_future<Output>> insert_task(Input const& in, FunctionCall const& work){
         std::lock_guard lock(mutex);
+        if (!first_arrival){
+            arrival_rate += arrival_time.stop();
+        }
 
         Task<Input, Output>* val = _queue.emplace_back(new Task<Input, Output>(in, work));
 
@@ -71,6 +75,8 @@ public:
             return {};
         }
 
+        arrival_time = TimeIt();
+        first_arrival = false;
         return std::make_optional(val->promise.get_future());
     }
 
@@ -96,8 +102,8 @@ public:
         double total_idle = 0;
         std::size_t task_count = 0;
 
-        printf(" Thread Pool Report\n");
-        printf("   ID       WORK       IDLE   (%%)  TASKS\n");
+        printf("Thread Pool Report\n");
+        printf("   ID       WORK       IDLE   (%%)  TASKS  WORK/TASK\n");
         for(int i = 0; i < _workers.size(); ++i){
             double a = _workers[i].total_work_time;
             double b = _workers[i].total_idle_time;
@@ -107,20 +113,29 @@ public:
             total_idle += b;
             task_count += c;
 
-            printf("%5d %10.4f %10.4f %6.2f %5lu\n", i, a, b, 100.0 * a / (a + b), c);
+            printf("%5d %10.4f %10.4f %6.2f %5lu %10.4f\n", i, a, b, 100.0 * a / (a + b), c, a / double(c));
         }
 
-        printf("Total %10.4f %10.4f %6.2f %5lu\n", total_work, total_idle, 100.0 * total_work / (total_idle + total_work), task_count);
+        printf("Total %10.4f %10.4f %6.2f %5lu %10.4f\n",
+               total_work, total_idle, 100.0 * total_work / (total_idle + total_work),
+               task_count, total_work / double(task_count));
 
         printf("\n                 TIME   (%%)\n");
         printf("Empty Queue %9.2f %6.2f\n", total_empty_queue_time, total_empty_queue_time * 100.0 / live_time);
         printf("Full  Queue %9.2f %6.2f\n", total_full_queue_time, total_full_queue_time * 100.0 / live_time);
-        printf("   All Time %9.2f %6.2f\n", live_time, 100.0);
+        printf("   All Time %9.2f %6.2f\n\n", live_time, 100.0);
+
+        printf("    Arrival Rate %9.2f\n", arrival_rate.mean());
+        printf("  Departure Rate %9.2f\n", deparature_rate.mean());
     }
 
 private:
     Task<Input, Output>* next_task(){
         std::lock_guard lock(mutex);
+
+        if (!first_deparature){
+            deparature_rate += deparature_time.stop();
+        }
 
         if (was_full){
             was_full = false;
@@ -132,7 +147,14 @@ private:
             empty_queue = TimeIt();
         }
 
-        return _queue.pop();
+        // only register depature if queue is not empty
+        auto ptr = _queue.pop();
+        //if (ptr != nullptr)
+        {
+            deparature_time = TimeIt();
+            first_deparature = false;
+        }
+        return ptr;
     }
 
     struct WorkerThread{
@@ -162,7 +184,7 @@ private:
                     self->task_count += 1;
                 } else {
                     TimeIt idle_time;
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
                     self->total_idle_time += idle_time.stop();
                 }
             }
@@ -189,6 +211,15 @@ private:
     double total_full_queue_time = 0;
     double total_empty_queue_time = 0;
     double live_time = 0;
+
+    bool first_arrival = true;
+    bool first_deparature = true;
+
+    TimeIt arrival_time;
+    TimeIt deparature_time;
+
+    StatStream arrival_rate;
+    StatStream deparature_rate;
 
     std::mutex mutex;
     RingBuffer<Task<Input, Output>*> _queue;

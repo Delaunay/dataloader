@@ -14,6 +14,18 @@ public:
     int height() const { return _height; }
     int size()   const { return int(_image.size());}
 
+    Image(Image&& img):
+        _image(std::move(img._image)), _width(img.width()), _height(img.height())
+    {}
+
+    Image(Image const& img):
+        _image(img._image), _width(img.width()), _height(img.height())
+    {}
+
+    /*
+    Image& operator=(const Image& img){
+
+    }*/
 
     Image& inplace_scale(int nw, int nh);
 

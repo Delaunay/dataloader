@@ -5,7 +5,7 @@
 #include <iostream>
 
 
-ImageFolder::ImageFolder(std::string const& folder_name, ImageFolder::Loader& loader, bool verbose):
+ImageFolder::ImageFolder(std::string const& folder_name, ImageFolder::Loader const& loader, bool verbose):
     folder(folder_name), loader(loader)
 {
     TimeIt init_time;

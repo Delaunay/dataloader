@@ -11,6 +11,7 @@ int main(){
     double total = 0;
     int count = 0;
     int total_size = 0;
+    /*
 
     std::function<int(std::tuple<Path, int, std::size_t> const& item)> loader_fun = [&](std::tuple<Path, int, std::size_t> const& item){
         Path path; int label; std::size_t size;
@@ -43,7 +44,7 @@ int main(){
 
     std::cout << " Read " << count << " images in " << total << std::endl;
     std::cout << count / total << " images / sec" << std::endl;
-    std::cout << (total_size / 1024 / 1024) / total  << " Mo / sec " << std::endl;
+    std::cout << (total_size / 1024 / 1024) / total  << " Mo / sec " << std::endl;*/
 
     return 0;
 }

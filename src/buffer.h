@@ -81,7 +81,7 @@ template<typename T>
 class RingBuffer{
 public:
     //using value_type = std::<T>;
-    RingBuffer(std::size_t size, std::function<T()> init = T()){
+    RingBuffer(std::size_t size, std::function<T()> init = [](){ return T(); }){
         _buffer.reserve(size);
 
         for(int i = 0; i < size; ++i){

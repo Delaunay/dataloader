@@ -2,7 +2,9 @@
 #define DATALOADER_IMAGE_FOLDER_HEADER_H
 
 #include "ffilesystem.h"
+#include "image.h"
 
+#include <future>
 #include <unordered_map>
 #include <tuple>
 #include <vector>
@@ -16,11 +18,12 @@
 class ImageFolder{
 public:
     using Path = std::filesystem::path;
-    using Loader = std::function<int(std::tuple<Path, int, std::size_t> const& item)>;
+    using LoaderReturnType = Image;
+    using Loader = std::function<LoaderReturnType(std::tuple<Path, int, std::size_t> const& item)>;
 
-    ImageFolder(std::string const& folder_name, Loader& loader, bool verbose=true);
+    ImageFolder(std::string const& folder_name, Loader const& loader, bool verbose=true);
 
-    int get_item(int index) const{
+    LoaderReturnType get_item(int index) const{
         assert(index >= 0  && index < _images.size() && "image index  should be >= 0");
         return loader(_images[int(index)]);
     }
