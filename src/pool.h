@@ -101,6 +101,7 @@ public:
         double total_work = 0;
         double total_idle = 0;
         std::size_t task_count = 0;
+        live_time = run_time.stop();
 
         printf("Thread Pool Report\n");
         printf("   ID       WORK       IDLE   (%%)  TASKS  WORK/TASK\n");

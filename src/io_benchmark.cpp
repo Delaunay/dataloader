@@ -51,8 +51,10 @@ Image single_threaded_loader(std::tuple<Path, int, std::size_t> const& item){
 
 int main(int argc, const char* argv[]){
 
-    int image_to_load = 256;
+    int image_to_load = 32;
     int seed = int(time(nullptr));
+    int thread_count = 16;
+    int batch_size = 32;
 
     //const char* data_loc = "/home/user1/test_database/imgnet/ImageNet2012_jpeg/train/";
     const char* data_loc = "/media/setepenre/UserData/tmp/fake";
@@ -69,6 +71,14 @@ int main(int argc, const char* argv[]){
         if ("--seed" == arg){
             std::stringstream ss(argv[i + 1]);
             ss >> seed;
+        }
+        if ("-j" ==arg){
+            std::stringstream ss(argv[i + 1]);
+            ss >> thread_count;
+        }
+        if ("-b" ==arg){
+            std::stringstream ss(argv[i + 1]);
+            ss >> batch_size;
         }
     }
 
@@ -125,8 +135,7 @@ int main(int argc, const char* argv[]){
     try{
         ImageFolder dataset(data_loc, single_threaded_loader);
         // ImageFolder const& dataset, int batch_size, int worker_cout = 6, int buffering=1, int seed=0
-        int thread_count = 16;
-        DataLoader dataloader(dataset, 32, thread_count, 1, seed);
+        DataLoader dataloader(dataset, batch_size, thread_count, 1, seed);
 
         //std::vector<std::shared_future<Image>> images;
 
