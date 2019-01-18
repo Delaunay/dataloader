@@ -1,34 +1,52 @@
+# Dataloader
+
+* Machine: Newton
 
 
-Initial Test
-
-* Single Threaded
-* 2 Hard Drives in RAID
-
-* ▶ ./bin/io_benchmark --data /media/setepenre/UserData/tmp/fake -n 2048 
-    - 32842 images found
-    - 100 classes found
-    - took 2.22461s to initialize
-* Read 2048 images in 20.6777 sec
-    - 99.0439 file/sec
-    - 59.5327 Mo/sec
-    - 615.9674 Ko
-* Decoded 2048 images in 26.3394 sec
-    - 77.7543 file/sec
-    - 14.5789 Mo/sec
-* Scaling 2048 images in 3.7789 sec
-    - 541.9519 file/sec
-    - 12.7020 Mo/sec
-* Total 2048 images in 47.0171 sec
-    - 43.5586 file/sec
-    - Overhead 0.0198 sec 
-    - Compression Ratio After downscale  0.3117
-    - Compression Ratio before downscale -1.662
-
+    * Thread Count = 1 (batch=32)
+        Total 1024 images in 37.0658 sec
+         - 27.6266 file/sec / thread
+         - 27.3636 file/sec overall
+         - Single Thread Time 37.4220 sec 
+         - Task Time 37.0658
+         - Overhead 0.3563 sec 
+         - Compression Ratio before scaling 4.9874
+         - Compression Ratio after scaling 0.2387
+    
+    * Thread Count = 2 (batch=32)
+        Total 1024 images in 39.4663 sec
+         - 25.9462 file/sec / thread
+         - 50.6838 file/sec overall
+         - Single Thread Time 20.2037 sec 
+         - Task Time 39.4663
+         - Overhead -19.2626 sec 
+         - Compression Ratio before scaling 4.9873
+         - Compression Ratio after scaling 0.2386
+    
+    * Thread Count = 4 (batch=32)
+        Total 1024 images in 54.2277 sec
+         - 18.8833 file/sec / thread
+         - 71.5511 file/sec overall
+         - Single Thread Time 14.3114 sec 
+         - Task Time 54.2277
+         - Overhead -39.9162 sec 
+         - Compression Ratio before scaling 4.9922
+         - Compression Ratio after scaling 0.2389
+    
+    * Thread Count = 6 (batch=32)
+        Total 1024 images in 76.1220 sec
+         - 13.4521 file/sec / thread
+         - 73.9286 file/sec overall
+         - Single Thread Time 13.8512 sec 
+         - Overhead -62.2708 sec 
+         - Compression Ratio before scaling 5.0867
+         - Compression Ratio after scaling 0.2434
+    
+    
 
 # Thread Pool
 
-on a 12 cores processor.
+on a 6 cores processor, 12 threads.
 
 * Thread Count = 1
 
@@ -147,6 +165,7 @@ on a 12 cores processor.
 
 * Thread Count = 12
 
+
      Thread Pool Report
        ID       WORK       IDLE   (%)  TASKS     WORK/TASK
         0    23.3366     1.1384  95.35    16     1.4585
@@ -173,6 +192,7 @@ on a 12 cores processor.
 
 
 * Thread Count = 16
+
 
      Thread Pool Report
        ID       WORK       IDLE   (%)  TASKS     WORK/TASK
@@ -207,7 +227,7 @@ on a 12 cores processor.
 
 
 	    Timings (s)				Speed up (x)
-    Cores	Threads	Runtime	Time/Task		Threads	Runtime	Time/Task
+    Cores	Threads	Runtime	Time/Task	Threads	Runtime	Time/Task
     12	1	149.31	0.7448		0.50	0.515	1.025
     12	2	76.83	0.7637		1.00	1.000	1.000
     12	4	39.3	0.7752		2.00	1.955	0.985
@@ -217,48 +237,5 @@ on a 12 cores processor.
     12	12	24.48	1.4269		6.00	3.138	0.535
     12	14	24.87	1.6754		7.00	3.089	0.456
     12	16	24.78	1.9094		8.00	3.100	0.400
-
-* Dataloader
-
-
-* Thread Count = 1 (batch=32)
-    Total 1024 images in 37.0658 sec
-     - 27.6266 file/sec / thread
-     - 27.3636 file/sec overall
-     - Single Thread Time 37.4220 sec 
-     - Task Time 37.0658
-     - Overhead 0.3563 sec 
-     - Compression Ratio before scaling 4.9874
-     - Compression Ratio after scaling 0.2387
-
-* Thread Count = 2 (batch=32)
-    Total 1024 images in 39.4663 sec
-     - 25.9462 file/sec / thread
-     - 50.6838 file/sec overall
-     - Single Thread Time 20.2037 sec 
-     - Task Time 39.4663
-     - Overhead -19.2626 sec 
-     - Compression Ratio before scaling 4.9873
-     - Compression Ratio after scaling 0.2386
-
-* Thread Count = 4 (batch=32)
-    Total 1024 images in 54.2277 sec
-     - 18.8833 file/sec / thread
-     - 71.5511 file/sec overall
-     - Single Thread Time 14.3114 sec 
-     - Task Time 54.2277
-     - Overhead -39.9162 sec 
-     - Compression Ratio before scaling 4.9922
-     - Compression Ratio after scaling 0.2389
-
-* Thread Count = 6 (batch=32)
-    Total 1024 images in 76.1220 sec (combined thread) 
-     - 13.4521 file/sec / thread
-     - 73.9286 file/sec overall
-     - Single Thread Time 13.8512 sec 
-     - Overhead -62.2708 sec 
-     - Compression Ratio before scaling 5.0867
-     - Compression Ratio after scaling 0.2434
-
 
 
