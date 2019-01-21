@@ -25,11 +25,11 @@ public:
 
     LoaderReturnType get_item(int index) const{
         assert(index >= 0  && index < _images.size() && "image index  should be >= 0");
-        return loader(_images[int(index)]);
+        return loader(_images[std::size_t(index)]);
     }
 
-    int size() const {
-        return int(_images.size());
+    std::size_t size() const {
+        return _images.size();
     }
 
     std::vector<std::tuple<Path, int, std::size_t>> const& samples() const {

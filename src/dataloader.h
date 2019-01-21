@@ -6,6 +6,7 @@
 #include "runtime.h"
 
 #include <random>
+#include <algorithm>
 
 class DataLoader{
 public:
@@ -23,6 +24,34 @@ public:
     DataLoader(ImageFolder const& dataset, std::size_t batch_size, std::size_t worker_cout = 6, std::size_t buffering=1, int seed=0):
         dataset(dataset), batch_size(batch_size), seed(seed), buffering(buffering), pool(worker_cout, batch_size)
     {
+        image_indices = std::vector<std::size_t>(dataset.size());
+
+        for(std::size_t i = 0; i < std::size_t(dataset.size()); ++i){
+            image_indices[i] = i;
+        }
+
+        shuffle();
+    }
+
+    std::size_t get_next_image(){
+        std::size_t i = image_iterator;
+        image_iterator += 1;
+
+        // start new epoch
+        if (image_iterator >= dataset.size()){
+            _epoch += 1;
+            image_iterator = 0;
+            if (reshuffle_after_epoch){
+                shuffle();
+            }
+        }
+
+        // return std::max(prng(prng_engine) - 1, 0);
+        return image_indices[i];
+    }
+
+    std::size_t epoch() const {
+        return _epoch;
     }
 
     // should return a batch not an image
@@ -32,8 +61,8 @@ public:
         batch.reserve(batch_size);
 
         TimeIt schedule_time;
-        for(std::size_t i = 0; i < batch_size; ++i){
-            int index = std::max(prng(prng_engine) - 1, 0);
+        for(std::size_t i = 0; i < batch_size;){
+            int index = int(get_next_image());
 
             auto val = pool.insert_task(index, [&](int index){
                 return dataset.get_item(index);
@@ -41,8 +70,9 @@ public:
 
             if (val.has_value()){
                 future_batch[i] = val.value();
+                i += 1;
             } else {
-                // printf("error");
+                printf("Error image skipped\n");
             }
         }
         RuntimeStats::stat().insert_schedule(schedule_time.stop(), batch_size);
@@ -68,25 +98,6 @@ public:
         pool.shutdown();
     }
 
-    Sample load_sample(Path const& path, int label){
-
-    }
-
-
-    Batch accumulate_samples(std::vector<int>){
-
-    }
-/*
-    Batch make_batch(){
-        std::vector<std::future<>> samples(batch_size);
-
-        for(){
-            samples[i] = load_sample();
-        }
-
-        return accumulate_samples(samples);
-    }*/
-
     ImageFolder const& dataset;
     std::size_t const batch_size;
     int const seed;
@@ -97,25 +108,30 @@ public:
     }
 
 private:
+
+    void shuffle(){
+        auto rand = [this](std::size_t n) -> std::size_t {
+            std::uniform_int_distribution<std::size_t> a(0, n);
+            return a(prng_engine);
+        };
+
+        std::random_shuffle(
+            std::begin(image_indices),
+            std::end(image_indices),
+            rand
+        );
+    }
+
+private:
     using Buffer = std::vector<char>;
     ThreadPool<int, Image> pool;
-    //using Image = std::vector<int8_t>;
 
+    std::vector<std::size_t> image_indices{dataset.size()};
     std::mt19937 prng_engine{seed};
-    std::uniform_int_distribution<> prng{0, dataset.size()};
+    std::size_t image_iterator = 0;
 
-    // Ring buffer for
-    //  * the io loop to read from
-    //std::vector<std::vector<int>> io_work_item{buffering, std::vector<int>(batch_size)};
-
-    // Ring Buffer for
-    // * IO Thread to write to
-    // * TurboJPEG Thread to read from
-    //std::vector<std::vector<Buffer>> jpeg_buffer{buffering, std::vector<Buffer>(batch_size)};
-
-    // Ring Buffer for
-    // * TurboJPEG to write to
-    //std::vector<std::vector<Image>> batch_buffer{buffering, std::vector<Image>(batch_size)};
+    bool reshuffle_after_epoch = false;
+    std::size_t _epoch = 0;
 };
 
 #endif

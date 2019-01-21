@@ -87,7 +87,7 @@ public:
         printf("        Per Thread     |  Overall\n");
 
 #define REPORT(num, name)\
-        printf(#num #name " %d images\n", count_image);\
+        printf(#num ". " #name " %d images\n", count_image);\
         printf(" - %10.4f      sec | %10.4f      sec\n", total_time_##name.load(), total_time_##name.load() / thread_count);\
         printf(" - %10.4f file/sec | %10.4f file/sec\n", count_image / total_time_##name.load(), count_image / (total_time_##name.load() / thread_count));\
         printf(" - %10.4f   Mo/sec | %10.4f   Mo/sec\n", \
