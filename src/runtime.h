@@ -24,6 +24,8 @@ public:
     std::atomic<double>         total_time_##name{0};\
     std::atomic<std::size_t>    total_size_##name{0};
 
+
+
     DEF_TIME_SIZE_PAIR(read)
     DEF_ADD_SIZE_PAIR_VAL(read)
 
@@ -44,6 +46,29 @@ public:
         total_count_image += 1;
     }
 
+    std::size_t batch_size;
+    std::atomic<std::size_t> batch_count{0};
+    std::atomic<double> total_time_batch{0};
+
+    void insert_batch(double time, std::size_t batch_size_){
+        total_time_batch.store(total_time_batch.load() + time);
+        batch_size = batch_size_;
+    }
+
+    std::atomic<double> total_time_reduce{0};
+
+    void insert_reduce(double time, std::size_t){
+        batch_count += 1;
+        total_time_reduce.store(total_time_reduce.load() + time);
+    }
+
+
+    std::atomic<double> total_time_schedule{0};
+
+    void insert_schedule(double time, std::size_t){
+        total_time_schedule.store(total_time_schedule.load() + time);
+    }
+
     double total_per_thread_time(){
         return total_time_read + total_time_decode + total_time_scaling + total_time_transform;
     }
@@ -61,20 +86,21 @@ public:
 
         printf("        Per Thread     |  Overall\n");
 
-#define REPORT(name)\
-        printf(#name " %d images\n", count_image);\
+#define REPORT(num, name)\
+        printf(#num #name " %d images\n", count_image);\
         printf(" - %10.4f      sec | %10.4f      sec\n", total_time_##name.load(), total_time_##name.load() / thread_count);\
         printf(" - %10.4f file/sec | %10.4f file/sec\n", count_image / total_time_##name.load(), count_image / (total_time_##name.load() / thread_count));\
         printf(" - %10.4f   Mo/sec | %10.4f   Mo/sec\n", \
             (total_size_##name.load() / 1024 / 1024) / total_time_##name.load(),\
             (total_size_##name.load() / 1024 / 1024) / (total_time_##name.load() / thread_count));
 
-        REPORT(read);
-        REPORT(transform);
-        REPORT(decode);
-        REPORT(scaling);
+        REPORT(1, read);
+        REPORT(2, transform);
+        REPORT(3, decode);
+        REPORT(4, scaling);
 
 #undef REPORT
+
 
         printf("Total %d images\n", count_image);
         printf(" - %10.4f      sec | %10.4f      sec\n", total_time, loop);
@@ -84,6 +110,20 @@ public:
         printf(" - Compression Ratio after scaling %.4f\n", double(total_size_scaling.load()) / double(total_size_read.load()));
 
         printf("---------------------------------------------------\n");
+
+
+        printf("Dataloader %lu batchs \n", batch_count.load());
+        double process_time = (total_time_reduce.load()  + total_time_batch.load() + total_time_schedule.load());
+        double batch_img  = double(batch_size) / (total_time_batch.load() / double(batch_count));
+        double reduce_img = double(batch_size) / (total_time_reduce.load() / double(batch_count));
+        double total_img  = double(batch_size) / (process_time / double(batch_count));
+
+        printf(" -  Sched %8.4f sec\n", total_time_schedule.load());
+        printf(" -  Batch %8.4f sec | %10.4f img/sec\n", total_time_batch.load() , batch_img);
+        printf(" - Reduce %8.4f sec | %10.4f img/sec\n", total_time_reduce.load() , reduce_img);
+        printf(" -  Total %8.4f sec | %10.4f img/sec\n", process_time, total_img);
+        printf("---------------------------------------------------\n");
+
     }
 
 private:

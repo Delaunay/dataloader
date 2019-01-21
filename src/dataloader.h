@@ -3,6 +3,7 @@
 
 #include "dataset.h"
 #include "pool.h"
+#include "runtime.h"
 
 #include <random>
 
@@ -19,7 +20,7 @@ public:
      * @param buffering     How many bathes to work at once
      * @param seed          Seed for the PRNG
      */
-    DataLoader(ImageFolder const& dataset, int batch_size, int worker_cout = 6, int buffering=1, int seed=0):
+    DataLoader(ImageFolder const& dataset, std::size_t batch_size, std::size_t worker_cout = 6, std::size_t buffering=1, int seed=0):
         dataset(dataset), batch_size(batch_size), seed(seed), buffering(buffering), pool(worker_cout, batch_size)
     {
     }
@@ -30,7 +31,8 @@ public:
         std::vector<Image> batch;
         batch.reserve(batch_size);
 
-        for(int i = 0; i < batch_size; ++i){
+        TimeIt schedule_time;
+        for(std::size_t i = 0; i < batch_size; ++i){
             int index = std::max(prng(prng_engine) - 1, 0);
 
             auto val = pool.insert_task(index, [&](int index){
@@ -43,13 +45,21 @@ public:
                 // printf("error");
             }
         }
+        RuntimeStats::stat().insert_schedule(schedule_time.stop(), batch_size);
 
-        for(int i = 0; i < batch_size; ++i){
+        TimeIt batch_time;
+        for(std::size_t i = 0; i < batch_size; ++i){
             std::shared_future<Image>& fut = future_batch[i];
             fut.wait();
+        }
+        RuntimeStats::stat().insert_batch(batch_time.stop(), batch_size);
 
+        TimeIt reduce_time;
+        for(std::size_t i = 0; i < batch_size; ++i){
+            std::shared_future<Image>& fut = future_batch[i];
             batch.push_back(std::move(fut.get()));
         }
+        RuntimeStats::stat().insert_reduce(reduce_time.stop(), batch_size);
 
         return batch;
     }
