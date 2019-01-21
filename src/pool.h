@@ -130,6 +130,10 @@ public:
         printf("  Departure Rate %9.2f\n", deparature_rate.mean());
     }
 
+    std::size_t size() const {
+        return _queue.size();
+    }
+
 private:
     Task<Input, Output>* next_task(){
         std::lock_guard lock(mutex);

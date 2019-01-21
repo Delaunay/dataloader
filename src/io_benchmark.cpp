@@ -55,9 +55,10 @@ int main(int argc, const char* argv[]){
     int seed = int(time(nullptr));
     int thread_count = 16;
     int batch_size = 32;
+    int buffering = 3;
 
-    //const char* data_loc = "/home/user1/test_database/imgnet/ImageNet2012_jpeg/train/";
-    const char* data_loc = "/media/setepenre/UserData/tmp/fake";
+    const char* data_loc = "/home/user1/test_database/imgnet/ImageNet2012_jpeg/train/";
+    //const char* data_loc = "/media/setepenre/UserData/tmp/fake";
 
     for(int i = 0; i < argc; ++i){
         std::string arg = std::string(argv[i]);
@@ -79,6 +80,10 @@ int main(int argc, const char* argv[]){
         if ("-b" ==arg){
             std::stringstream ss(argv[i + 1]);
             ss >> batch_size;
+        }
+        if ("-p" ==arg){
+            std::stringstream ss(argv[i + 1]);
+            ss >> buffering;
         }
     }
 
@@ -135,7 +140,7 @@ int main(int argc, const char* argv[]){
     try{
         ImageFolder dataset(data_loc, single_threaded_loader);
         // ImageFolder const& dataset, int batch_size, int worker_cout = 6, int buffering=1, int seed=0
-        DataLoader dataloader(dataset, batch_size, thread_count, 1, seed);
+        DataLoader dataloader(dataset, batch_size, thread_count, buffering, seed);
 
         //std::vector<std::shared_future<Image>> images;
 

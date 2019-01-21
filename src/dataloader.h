@@ -21,8 +21,8 @@ public:
      * @param buffering     How many bathes to work at once
      * @param seed          Seed for the PRNG
      */
-    DataLoader(ImageFolder const& dataset, std::size_t batch_size, std::size_t worker_cout = 6, std::size_t buffering=1, int seed=0):
-        dataset(dataset), batch_size(batch_size), seed(seed), buffering(buffering), pool(worker_cout, batch_size)
+    DataLoader(ImageFolder const& dataset, std::size_t batch_size_, std::size_t worker_cout = 6, std::size_t buffering_=1, int seed=0):
+        dataset(dataset), buffering(buffering_), batch_size(batch_size_), seed(seed), pool(worker_cout, batch_size_ * buffering_)
     {
         image_indices = std::vector<std::size_t>(dataset.size());
 
@@ -31,9 +31,19 @@ public:
         }
 
         shuffle();
+
+        future_buffered_batch = std::vector<std::vector<std::shared_future<Image>>>(buffering);
+
+        for(std::size_t i = 0; i < buffering; ++i){
+           future_buffered_batch[i] = std::vector<std::shared_future<Image>>(batch_size);
+        }
+
+        for(std::size_t i = 1; i < buffering; ++i){
+           send_next_batch();
+        }
     }
 
-    std::size_t get_next_image(){
+    std::size_t get_next_image_index(){
         std::size_t i = image_iterator;
         image_iterator += 1;
 
@@ -54,15 +64,13 @@ public:
         return _epoch;
     }
 
-    // should return a batch not an image
-    std::vector<Image> get_next_item(){
-        std::vector<std::shared_future<Image>> future_batch(batch_size);
-        std::vector<Image> batch;
-        batch.reserve(batch_size);
+
+    void send_next_batch(){
+        std::vector<std::shared_future<Image>>& future_batch = future_buffered_batch[buffering_index];
 
         TimeIt schedule_time;
         for(std::size_t i = 0; i < batch_size;){
-            int index = int(get_next_image());
+            int index = int(get_next_image_index());
 
             auto val = pool.insert_task(index, [&](int index){
                 return dataset.get_item(index);
@@ -72,10 +80,21 @@ public:
                 future_batch[i] = val.value();
                 i += 1;
             } else {
-                printf("Error image skipped\n");
+                printf("Error image skipped (full: %d, size: %lu)\n", pool.is_full(), pool.size());
             }
         }
         RuntimeStats::stat().insert_schedule(schedule_time.stop(), batch_size);
+        buffering_index = (buffering_index + 1) % buffering;
+    }
+
+    // should return a batch not an image
+    std::vector<Image> get_next_item(){
+        std::vector<Image> batch;
+        batch.reserve(batch_size);
+
+        send_next_batch();
+        std::vector<std::shared_future<Image>>& future_batch = future_buffered_batch[next_batch];
+        next_batch = (next_batch + 1) % buffering;
 
         TimeIt batch_time;
         for(std::size_t i = 0; i < batch_size; ++i){
@@ -99,9 +118,9 @@ public:
     }
 
     ImageFolder const& dataset;
+    std::size_t const buffering;
     std::size_t const batch_size;
     int const seed;
-    std::size_t const buffering;
 
     void report(){
         pool.report();
@@ -127,6 +146,11 @@ private:
     ThreadPool<int, Image> pool;
 
     std::vector<std::size_t> image_indices{dataset.size()};
+
+    std::vector<std::vector<std::shared_future<Image>>> future_buffered_batch;
+    std::size_t buffering_index = 0;
+    std::size_t next_batch = 0;
+
     std::mt19937 prng_engine{seed};
     std::size_t image_iterator = 0;
 
