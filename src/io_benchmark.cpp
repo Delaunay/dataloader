@@ -80,19 +80,25 @@ int main(int argc, const char* argv[]){
             std::stringstream ss(argv[i + 1]);
             ss >> seed;
         }
-        if ("-j" ==arg){
+        if ("-j" == arg){
             std::stringstream ss(argv[i + 1]);
             ss >> thread_count;
         }
-        if ("-b" ==arg){
+        if ("-b" == arg){
             std::stringstream ss(argv[i + 1]);
             ss >> batch_size;
         }
-        if ("-p" ==arg){
+        if ("-p" == arg){
             std::stringstream ss(argv[i + 1]);
             ss >> buffering;
         }
+        if ("-io" == arg){
+            std::stringstream ss(argv[i + 1]);
+            ss >> max_io_thread;
+        }
     }
+
+    make_io_lock(max_io_thread);
 
     Transform trans;
     trans.hflip();
