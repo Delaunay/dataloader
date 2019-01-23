@@ -17,3 +17,19 @@ std::vector<unsigned char> load_file(std::filesystem::path const& file_name, std
     fclose(file);
     return buffer;
 }
+
+
+Semaphore& make_io_lock(std::size_t max_io_thread){
+    static Semaphore io_lock(max_io_thread);
+    return io_lock;
+}
+
+
+void start_io(){
+    make_io_lock(0).wait();
+}
+
+
+void end_io(){
+    make_io_lock(0).notify();
+}

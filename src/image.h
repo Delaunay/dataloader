@@ -22,11 +22,6 @@ public:
         _image(img._image), _width(img.width()), _height(img.height())
     {}
 
-    /*
-    Image& operator=(const Image& img){
-
-    }*/
-
     Image& inplace_scale(int nw, int nh);
 
     void save_ppm(const char* name);

@@ -24,7 +24,7 @@ public:
     ImageFolder(std::string const& folder_name, Loader const& loader, bool verbose=true);
 
     LoaderReturnType get_item(int index) const{
-        assert(index >= 0  && index < _images.size() && "image index  should be >= 0");
+        assert(index >= 0  && std::size_t(index) < _images.size() && "image index out of bounds");
         return loader(_images[std::size_t(index)]);
     }
 

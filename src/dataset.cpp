@@ -6,7 +6,7 @@
 
 
 ImageFolder::ImageFolder(std::string const& folder_name, ImageFolder::Loader const& loader, bool verbose):
-    folder(folder_name), loader(loader)
+    loader(loader), folder(folder_name)
 {
     TimeIt init_time;
     find_all_images(folder_name);

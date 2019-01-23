@@ -62,6 +62,12 @@ public:
         total_time_reduce.store(total_time_reduce.load() + time);
     }
 
+    std::atomic<double> total_io_block{0};
+
+    void insert_io_block(double time){
+        total_io_block.store(total_io_block.load() + time);
+    }
+
 
     std::atomic<double> total_time_schedule{0};
 

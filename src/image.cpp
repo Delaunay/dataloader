@@ -3,6 +3,8 @@
 #include <cmath>
 #include <cstdio>
 
+
+// Simple proportional scaling
 Image& Image::inplace_scale(int nw, int nh){
     std::vector<unsigned char> buffer(std::size_t(nw * nh * 3));
     float wratio = float(_width) / float(nw);

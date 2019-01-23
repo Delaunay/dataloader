@@ -10,8 +10,6 @@
 
 class DataLoader{
 public:
-    using Batch = int;
-    using Sample = int;
     using Path = std::filesystem::path;
 
     /**

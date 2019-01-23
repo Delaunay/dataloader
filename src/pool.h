@@ -11,28 +11,26 @@
  *  FixedThreadPool
  *      with a fixed amount of worker and a max amount of requests
  */
-
-template<typename Input, typename Output>
-struct Task{
-    using FunctionCall = std::function<Output(Input a)>;
-
-    Task() = default;
-
-    Task(Task&&) = default;
-
-    Task(Task&) = default;
-
-    Task(Input const& in, FunctionCall const& work):
-        in(in), work(work)
-    {}
-
-    Input in;
-    FunctionCall work;
-    std::promise<Output> promise;
-};
-
 template<typename Input, typename Output>
 class ThreadPool{
+private:
+    struct Task{
+        using FunctionCall = std::function<Output(Input a)>;
+
+        Task() = default;
+
+        Task(Task&&) = default;
+
+        Task(Task&) = default;
+
+        Task(Input const& in, FunctionCall const& work):
+            in(in), work(work)
+        {}
+
+        Input in;
+        FunctionCall work;
+        std::promise<Output> promise;
+    };
 public:
     using FunctionCall = std::function<Output(Input a)>;
 
@@ -59,7 +57,7 @@ public:
             arrival_rate += arrival_time.stop();
         }
 
-        Task<Input, Output>* val = _queue.emplace_back(new Task<Input, Output>(in, work));
+        Task* val = _queue.emplace_back(new Task(in, work));
 
         if (is_full() && !was_full){
             full_queue = TimeIt();
@@ -89,7 +87,8 @@ public:
             worker.running = false;
         }
 
-        // wait for each thread to finish
+        // make sure all worker stopped and are not stuck
+        // on a task
         for(auto& worker: _workers){
             worker.thread.join();
         }
@@ -135,7 +134,7 @@ public:
     }
 
 private:
-    Task<Input, Output>* next_task(){
+    Task* next_task(){
         std::lock_guard lock(mutex);
 
         if (!first_deparature){
@@ -172,7 +171,7 @@ private:
                 return;
 
             while(self->running){
-                Task<Input, Output>* task = self->pool->next_task();
+                Task* task = self->pool->next_task();
 
                 if (task != nullptr){
                     TimeIt work_time;
@@ -227,7 +226,7 @@ private:
     StatStream deparature_rate;
 
     std::mutex mutex;
-    RingBuffer<Task<Input, Output>*> _queue;
+    RingBuffer<Task*> _queue;
     std::vector<WorkerThread> _workers;
 };
 
