@@ -30,7 +30,7 @@ Image single_threaded_loader(std::tuple<Path, int, std::size_t> const& item){
     RuntimeStats::stat().insert_read(read_time.stop(), size);
 
     Transform trans;
-    trans.hflip();
+    //trans.hflip();
 
     // Transform
     TimeIt transform_time;
@@ -100,21 +100,14 @@ int main(int argc, const char* argv[]){
 
     make_io_lock(max_io_thread);
 
-    Transform trans;
-    trans.hflip();
-
     try{
         ImageFolder dataset(data_loc, single_threaded_loader);
-        // ImageFolder const& dataset, int batch_size, int worker_cout = 6, int buffering=1, int seed=0
         DataLoader dataloader(dataset, batch_size, thread_count, buffering, seed);
-
-        //std::vector<std::shared_future<Image>> images;
 
         TimeIt loop_time;
         for(int i = 0; i < image_to_load; ++i){
             dataloader.get_next_item();
         }
-
 
         double loop = loop_time.stop();
         RuntimeStats::stat().report(loop, thread_count);

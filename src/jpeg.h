@@ -13,16 +13,23 @@ public:
         return &xform;
     }
 
-    Transform& hflip      (){   xform.op = TJXOP_HFLIP;       return *this; }
-    Transform& vflip      (){   xform.op = TJXOP_VFLIP;       return *this; }
-    Transform& transpose  (){   xform.op = TJXOP_TRANSPOSE;   return *this; }
-    Transform& transverse (){   xform.op = TJXOP_TRANSVERSE;  return *this; }
-    Transform& rot90      (){   xform.op = TJXOP_ROT90;       return *this; }
-    Transform& rot180     (){   xform.op = TJXOP_ROT180;      return *this; }
-    Transform& rot270     (){   xform.op = TJXOP_ROT270;      return *this; }
+    Transform& hflip      (){   xform.op = TJXOP_HFLIP;       transform_defined = true; return *this; }
+    Transform& vflip      (){   xform.op = TJXOP_VFLIP;       transform_defined = true; return *this; }
+    Transform& transpose  (){   xform.op = TJXOP_TRANSPOSE;   transform_defined = true; return *this; }
+    Transform& transverse (){   xform.op = TJXOP_TRANSVERSE;  transform_defined = true; return *this; }
+    Transform& rot90      (){   xform.op = TJXOP_ROT90;       transform_defined = true; return *this; }
+    Transform& rot180     (){   xform.op = TJXOP_ROT180;      transform_defined = true; return *this; }
+    Transform& rot270     (){   xform.op = TJXOP_ROT270;      transform_defined = true; return *this; }
 
 private:
     tjtransform xform;
+    bool transform_defined = false;
+
+public:
+
+    operator bool(){
+        return transform_defined;
+    }
 };
 
 class JpegImage{

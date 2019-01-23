@@ -31,6 +31,10 @@ JpegImage::JpegImage(JpegImage const& img):
 {}
 
 JpegImage& JpegImage::inplace_transform(Transform& xform, int flag){
+    if (!bool(xform)){
+        return *this;
+    }
+
     // Transform the jpeg directly
     std::vector<unsigned char> transform_buffer(_image.size() * 2, 0);
 
