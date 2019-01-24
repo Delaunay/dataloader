@@ -32,6 +32,8 @@ Makefile*
 /old/
 */.idea/*
 *.autosave
+dependencies/torch-cpu/
+dependencies/torch-gpu/
 dependencies/SDL/
 dependencies/SDL_ttf/
 .idea/

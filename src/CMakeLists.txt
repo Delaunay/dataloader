@@ -36,7 +36,6 @@ find_package(Boost COMPONENTS filesystem)
 
 include_directories(${TurboJPEG_INCLUDE_DIRS})
 
-
 set(FILESYSTEM_LIB
     ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
@@ -44,33 +43,26 @@ set(FILESYSTEM_LIB
     pthread
 )
 
+macro(library name)
+    ADD_LIBRARY(${name} ${DATALOADER_HDS} ${DATALOADER_SRC})
+    TARGET_LINK_LIBRARIES(${name} ${FILESYSTEM_LIB} ${TurboJPEG_LIBRARIES})
+    SET_PROPERTY(TARGET ${name} PROPERTY CXX_STANDARD 17)
+endmacro(library)
 
+macro(executable name)
+    ADD_EXECUTABLE(${name} ${name}.cpp)
+    TARGET_LINK_LIBRARIES(${name} ${FILESYSTEM_LIB} ${TurboJPEG_LIBRARIES} dataloader)
+    SET_PROPERTY(TARGET ${name} PROPERTY CXX_STANDARD 17)
+endmacro(executable)
 
-# main library (prevent recompilation when building tests)
-ADD_LIBRARY(dataloader ${DATALOADER_HDS} ${DATALOADER_SRC})
-TARGET_LINK_LIBRARIES(dataloader ${FILESYSTEM_LIB} ${TurboJPEG_LIBRARIES})
-SET_PROPERTY(TARGET dataloader PROPERTY CXX_STANDARD 17)
+library(dataloader)
 
+executable(main)
+executable(io_benchmark)
 
-#  main executable
-# ==========================
-#set(CMAKE_CXX_STANDARD 17)
-ADD_EXECUTABLE(main main.cpp)
-TARGET_LINK_LIBRARIES(main stdc++fs ${TurboJPEG_LIBRARIES} dataloader)
-SET_PROPERTY(TARGET main PROPERTY CXX_STANDARD 17)
+executable(test_buffer)
+executable(test_pool)
 
-ADD_EXECUTABLE(io_benchmark io_benchmark.cpp)
-TARGET_LINK_LIBRARIES(io_benchmark ${FILESYSTEM_LIB} ${TurboJPEG_LIBRARIES} dataloader)
-SET_PROPERTY(TARGET io_benchmark PROPERTY CXX_STANDARD 17)
-
-ADD_EXECUTABLE(test_buffer test_buffer.cpp)
-TARGET_LINK_LIBRARIES(test_buffer ${FILESYSTEM_LIB} ${TurboJPEG_LIBRARIES} dataloader)
-SET_PROPERTY(TARGET test_buffer PROPERTY CXX_STANDARD 17)
-
-ADD_EXECUTABLE(test_pool test_pool.cpp)
-TARGET_LINK_LIBRARIES(test_pool ${FILESYSTEM_LIB} ${TurboJPEG_LIBRARIES} dataloader)
-SET_PROPERTY(TARGET test_pool PROPERTY CXX_STANDARD 17)
-
- 
-
+add_test(NAME buffer COMMAND test_buffer)
+add_test(NAME pool COMMAND test_pool)
 
