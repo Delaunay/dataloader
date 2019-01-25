@@ -1,17 +1,13 @@
-#include "dataset.h"
-#include "dataloader.h"
-#include "jpeg.h"
-#include "utils.h"
-#include "runtime.h"
-#include "pool.h"
-#include "io.h"
 
-#include "loader.h"
 
 #include <ctime>
 #include <sstream>
 #include <cstdio>
 #include <cstring>
+
+#include "io.h"
+#include "torchloader.h"
+#include "loader.h"
 
 int main(int argc, const char* argv[]){
 
@@ -62,11 +58,13 @@ int main(int argc, const char* argv[]){
 
     try{
         ImageFolder dataset(data_loc, single_threaded_loader);
-        DataLoader dataloader(dataset, batch_size, thread_count, buffering, seed);
+        PyLoader dataloader(dataset, batch_size, thread_count, buffering, seed);
 
         TimeIt loop_time;
         for(int i = 0; i < image_to_load; ++i){
-            dataloader.get_next_item();
+            at::Tensor t = dataloader.get_next_item();
+
+            //t.print();
         }
 
         double loop = loop_time.stop();

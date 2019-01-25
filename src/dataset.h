@@ -3,6 +3,7 @@
 
 #include "ffilesystem.h"
 #include "image.h"
+#include "loader.h"
 
 #include <future>
 #include <unordered_map>
@@ -22,6 +23,10 @@ public:
     using Loader = std::function<LoaderReturnType(std::tuple<Path, int, std::size_t> const& item)>;
 
     ImageFolder(std::string const& folder_name, Loader const& loader, bool verbose=true);
+
+    ImageFolder(std::string const& folder_name, bool verbose=true):
+        ImageFolder(folder_name, single_threaded_loader, verbose)
+    {}
 
     LoaderReturnType get_item(int index) const{
         assert(index >= 0  && std::size_t(index) < _images.size() && "image index out of bounds");

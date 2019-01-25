@@ -28,6 +28,10 @@ public:
 
     void save_jpeg(const char* name, int flag = TJFLAG_FASTDCT);
 
+    unsigned char const * data() const {
+        return _image.data();
+    }
+
 private:
     std::vector<unsigned char> _image;
     int _width = 0;

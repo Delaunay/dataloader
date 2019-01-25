@@ -1,12 +1,18 @@
 #ifndef DATALOADER_DATALOADER_HEADER_H
 #define DATALOADER_DATALOADER_HEADER_H
 
+#include "utils.h"
 #include "dataset.h"
 #include "pool.h"
 #include "runtime.h"
+#include "io.h"
+
 
 #include <random>
 #include <algorithm>
+
+#undef DLOG
+#define DLOG(...)
 
 class DataLoader{
 public:
@@ -19,9 +25,17 @@ public:
      * @param buffering     How many bathes to work at once
      * @param seed          Seed for the PRNG
      */
-    DataLoader(ImageFolder const& dataset, std::size_t batch_size_, std::size_t worker_cout = 6, std::size_t buffering_=1, int seed=0):
+    DataLoader(ImageFolder const& dataset, std::size_t batch_size_, std::size_t worker_cout = 6, std::size_t buffering_=1, int seed=0, std::size_t io = 0):
         dataset(dataset), buffering(buffering_), batch_size(batch_size_), seed(seed), pool(worker_cout, batch_size_ * buffering_)
     {
+        DLOG("init dataloader");
+
+        if (io == 0){
+            io = worker_cout;
+        }
+
+        make_io_lock(io);
+
         image_indices = std::vector<std::size_t>(dataset.size());
 
         for(std::size_t i = 0; i < std::size_t(dataset.size()); ++i){
@@ -36,6 +50,7 @@ public:
            future_buffered_batch[i] = std::vector<std::shared_future<Image>>(batch_size);
         }
 
+        DLOG("Starting the load image request");
         for(std::size_t i = 1; i < buffering; ++i){
            send_next_batch();
         }
@@ -87,28 +102,9 @@ public:
 
     // should return a batch not an image
     std::vector<Image> get_next_item(){
-        std::vector<Image> batch;
-        batch.reserve(batch_size);
-
         send_next_batch();
-        std::vector<std::shared_future<Image>>& future_batch = future_buffered_batch[next_batch];
-        next_batch = (next_batch + 1) % buffering;
 
-        TimeIt batch_time;
-        for(std::size_t i = 0; i < batch_size; ++i){
-            std::shared_future<Image>& fut = future_batch[i];
-            fut.wait();
-        }
-        RuntimeStats::stat().insert_batch(batch_time.stop(), batch_size);
-
-        TimeIt reduce_time;
-        for(std::size_t i = 0; i < batch_size; ++i){
-            std::shared_future<Image>& fut = future_batch[i];
-            batch.push_back(std::move(fut.get()));
-        }
-        RuntimeStats::stat().insert_reduce(reduce_time.stop(), batch_size);
-
-        return batch;
+        return reduce_to_vector(get_future_batch());
     }
 
     ~DataLoader(){
@@ -120,11 +116,44 @@ public:
     std::size_t const batch_size;
     int const seed;
 
-    void report(){
+    void report() const {
         pool.report();
     }
 
-private:
+    void shutdown(){
+        pool.shutdown();
+    }
+public:
+    std::vector<std::shared_future<Image>>& get_future_batch(){
+        DLOG("Waiting for images");
+        std::vector<std::shared_future<Image>>& future_batch = future_buffered_batch[next_batch];
+        next_batch = (next_batch + 1) % buffering;
+
+        TimeIt batch_time;
+        for(std::size_t i = 0; i < batch_size; ++i){
+            DLOG("waiting for image (id: %lu)", i);
+            std::shared_future<Image>& fut = future_batch[i];
+            fut.wait();
+        }
+        RuntimeStats::stat().insert_batch(batch_time.stop(), batch_size);
+
+        DLOG("Images ready");
+        return future_batch;
+    }
+
+    std::vector<Image> reduce_to_vector(std::vector<std::shared_future<Image>>& future_batch){
+        std::vector<Image> batch;
+        batch.reserve(batch_size);
+
+        TimeIt reduce_time;
+        for(std::size_t i = 0; i < batch_size; ++i){
+            std::shared_future<Image>& fut = future_batch[i];
+            batch.push_back(std::move(fut.get()));
+        }
+        RuntimeStats::stat().insert_reduce(reduce_time.stop(), batch_size);
+
+        return batch;
+    }
 
     void shuffle(){
         auto rand = [this](std::size_t n) -> std::size_t {

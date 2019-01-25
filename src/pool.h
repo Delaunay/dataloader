@@ -7,6 +7,9 @@
 #include <functional>
 #include <future>
 
+#undef DLOG
+#define DLOG(...)
+
 /**
  *  FixedThreadPool
  *      with a fixed amount of worker and a max amount of requests
@@ -82,21 +85,23 @@ public:
         return _queue.full();
     }
 
-    void shutdown(){
+    void shutdown(bool safe = true){
         for(auto& worker: _workers){
             worker.running = false;
         }
 
         // make sure all worker stopped and are not stuck
         // on a task
-        for(auto& worker: _workers){
-            worker.thread.join();
-        }
+        if (safe)
+            for(auto& worker: _workers){
+                DLOG("Joining worker thread");
+                worker.thread.join();
+            }
 
         live_time = run_time.stop();
     }
 
-    void report(){
+    void report() const {
         double total_work = 0;
         double total_idle = 0;
         std::size_t task_count = 0;
@@ -167,8 +172,10 @@ private:
         {}
 
         static void run(WorkerThread* self){
-            if (self == nullptr)
+            if (self == nullptr){
+                printf("Worker Thread badly initialized");
                 return;
+            }
 
             while(self->running){
                 Task* task = self->pool->next_task();
@@ -180,6 +187,7 @@ private:
                         Output val = task->work(task->in);
                         task->promise.set_value(val);
                     } catch (...){
+                        printf("Exception occured");
                         task->promise.set_exception(std::current_exception());
                     }
 
@@ -192,6 +200,8 @@ private:
                     self->total_idle_time += idle_time.stop();
                 }
             }
+
+            DLOG("Worker Thread exiting");
         }
 
         ThreadPool* pool = nullptr;
@@ -214,7 +224,7 @@ private:
 
     double total_full_queue_time = 0;
     double total_empty_queue_time = 0;
-    double live_time = 0;
+    mutable double live_time = 0;
 
     bool first_arrival = true;
     bool first_deparature = true;

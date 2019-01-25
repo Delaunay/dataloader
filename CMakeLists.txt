@@ -70,7 +70,7 @@ INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
 #INCLUDE(cmake/genrev.cmake)
 
 # Dependencies to be compiled
-#ADD_SUBDIRECTORY(dependencies)
+ADD_SUBDIRECTORY(dependencies)
 
 # How to compile main lib
 ADD_SUBDIRECTORY(src)

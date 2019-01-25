@@ -20,7 +20,7 @@ std::vector<unsigned char> load_file(std::filesystem::path const& file_name, std
 
 
 Semaphore& make_io_lock(std::size_t max_io_thread){
-    static Semaphore io_lock(max_io_thread);
+    static Semaphore io_lock(max_io_thread > 0 ? max_io_thread: 20000);
     return io_lock;
 }
 

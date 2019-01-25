@@ -7,6 +7,17 @@
 
 #include <mutex>
 #include <condition_variable>
+#include <cstdio>
+
+template<typename ... Args>
+void print_log(const char * fmt, const Args& ... args) {
+    printf(fmt, args...);
+    printf("\n");
+    fflush(stdout);
+}
+
+#define DLOG(...) print_log(__VA_ARGS__)
+
 
 class TimeIt {
   public:
@@ -14,7 +25,7 @@ class TimeIt {
     using Clock           = std::chrono::high_resolution_clock;
     TimePoint const start = Clock::now();
 
-    double stop() {
+    double stop() const {
         TimePoint end = Clock::now();
         std::chrono::duration<double> time_span =
             std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
@@ -91,6 +102,11 @@ public:
         return false;
     }
 };
+
+
+
+
+
 
 /*
 template<typename T>
