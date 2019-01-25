@@ -73,7 +73,7 @@ INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
 ADD_SUBDIRECTORY(dependencies)
 
 # How to compile main lib
-ADD_SUBDIRECTORY(src)
+ADD_SUBDIRECTORY(dataloader)
 
 # Compile tests ?
 IF(BUILD_TESTING)
