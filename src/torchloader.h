@@ -15,7 +15,7 @@ public:
     {}
 
     // return a NCHW ui8 tensor
-    PyObject* get_next_item(){
+    void get_next_item(){
         DLOG("Sending next batch");
         loader.send_next_batch();
 
@@ -23,7 +23,9 @@ public:
         // https://github.com/pytorch/pytorch/blob/master/torch/csrc/utils/tensor_numpy.cpp#L88
         // what is puzzling me is: doesnt torch have a tensor type in python ??
         // how cheap is that conversion
-        return torch::utils::tensor_to_numpy(reduce_to_tensor(loader.get_future_batch()));
+        at::Tensor tensor = reduce_to_tensor(loader.get_future_batch());
+
+        //return torch::utils::tensor_to_numpy(tensor);
     }
 
     std::size_t const img_size = 3 * 224 * 224;
