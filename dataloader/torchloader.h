@@ -4,7 +4,7 @@
 #include "dataloader.h"
 
 #include <torch/all.h>
-#include <torch/csrc/utils/tensor_numpy.h>
+//#include <torch/csrc/utils/tensor_numpy.h>
 //#include <pybind11/pybind11.h>
 
 
@@ -15,17 +15,10 @@ public:
     {}
 
     // return a NCHW ui8 tensor
-    void get_next_item(){
-        DLOG("Sending next batch");
+    at::Tensor get_next_item(){
         loader.send_next_batch();
 
-        DLOG("Reducing batch");
-        // https://github.com/pytorch/pytorch/blob/master/torch/csrc/utils/tensor_numpy.cpp#L88
-        // what is puzzling me is: doesnt torch have a tensor type in python ??
-        // how cheap is that conversion
-        at::Tensor tensor = reduce_to_tensor(loader.get_future_batch());
-
-        //return torch::utils::tensor_to_numpy(tensor);
+        return reduce_to_tensor(loader.get_future_batch());;
     }
 
     std::size_t const img_size = 3 * 224 * 224;

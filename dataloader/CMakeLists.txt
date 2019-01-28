@@ -92,3 +92,8 @@ add_custom_command(TARGET cpploader POST_BUILD
         $<TARGET_FILE_DIR:cpploader>)
 
 
+ADD_EXECUTABLE(test_jit test_jit.cpp torchloader.cpp dataset.cpp ${DATALOADER_HDS} ${DATALOADER_SRC})
+TARGET_LINK_LIBRARIES(test_jit ${TurboJPEG_LIBRARIES} ${TORCH_LIBRARIES}
+    ${Boost_FILESYSTEM_LIBRARY}
+    ${Boost_SYSTEM_LIBRARY})
+SET_PROPERTY(TARGET test_jit PROPERTY CXX_STANDARD 17)

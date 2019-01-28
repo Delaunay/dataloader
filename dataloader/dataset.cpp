@@ -4,12 +4,16 @@
 #include <string>
 #include <iostream>
 
+namespace fs = std::filesystem;
 
 ImageFolder::ImageFolder(std::string const& folder_name, ImageFolder::Loader const& loader, bool verbose):
     loader(loader), folder(folder_name)
 {
     TimeIt init_time;
-    find_all_images(folder_name);
+    std::cout << folder_name << std::endl;
+
+    ImageFolder::Path path = folder_name;
+    find_all_images(path);
     double time = init_time.stop();
 
     if (verbose){
@@ -19,12 +23,13 @@ ImageFolder::ImageFolder(std::string const& folder_name, ImageFolder::Loader con
     }
 }
 
-
-
 void ImageFolder::find_all_images(ImageFolder::Path const& folder_name, int class_index){
-    namespace fs = std::filesystem;
 
-    for(fs::directory_entry const& entry: fs::directory_iterator(folder_name)){
+    auto iterator = fs::directory_iterator(folder_name);
+
+    DLOG("Iterator Created");
+
+    for(fs::directory_entry const& entry: iterator){
         if (is_directory(entry)){
             int index = int(_classes_to_index.size());
 
