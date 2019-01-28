@@ -72,7 +72,7 @@ int main(int argc, const char* argv[]){
 
         dataloader.report();
 
-    } catch (const std::filesystem::filesystem_error& e){
+    } catch (const FS_NAMESPACE::filesystem_error& e){
         printf("%s\n", e.what());
         return -1;
     }

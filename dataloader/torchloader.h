@@ -8,18 +8,27 @@
 //#include <pybind11/pybind11.h>
 
 
+#include <torch/csrc/utils/tensor_numpy.h>
+
 class PyLoader{
 public:
+#define PYTENSOR PyObject*
+
     PyLoader(ImageFolder const& dataset, std::size_t batch_size_, std::size_t worker_cout = 6, std::size_t buffering_=1, int seed=0, std::size_t io=0):
         loader(dataset, batch_size_, worker_cout, buffering_, seed, io)
     {}
 
     // return a NCHW ui8 tensor
-    at::Tensor get_next_item(){
+    PYTENSOR get_next_item(){
         loader.send_next_batch();
 
-        return reduce_to_tensor(loader.get_future_batch());;
+        return to_tensor_python(reduce_to_tensor(loader.get_future_batch()));
     }
+
+    PYTENSOR to_tensor_python(at::Tensor const& tensor){
+        return torch::utils::tensor_to_numpy(tensor);
+    }
+
 
     std::size_t const img_size = 3 * 224 * 224;
 

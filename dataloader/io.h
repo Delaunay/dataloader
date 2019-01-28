@@ -4,7 +4,7 @@
 #include "ffilesystem.h"
 #include "utils.h"
 
-std::vector<unsigned char> load_file(std::filesystem::path const& file_name, std::size_t file_size);
+std::vector<unsigned char> load_file(FS_NAMESPACE::path const& file_name, std::size_t file_size);
 
 Semaphore& make_io_lock(std::size_t max_io_thread);
 

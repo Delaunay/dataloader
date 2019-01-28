@@ -18,7 +18,7 @@
 // except it does not do the transformation this should be done in the loader
 class ImageFolder{
 public:
-    using Path = std::filesystem::path;
+    using Path = FS_NAMESPACE::path;
     using LoaderReturnType = Image;
     using Loader = std::function<LoaderReturnType(std::tuple<Path, int, std::size_t> const& item)>;
 

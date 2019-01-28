@@ -16,7 +16,7 @@
 
 class DataLoader{
 public:
-    using Path = std::filesystem::path;
+    using Path = FS_NAMESPACE::path;
 
     /**
      * @brief DataLoader    Loads dataset samples and accumulate them into batches for training
