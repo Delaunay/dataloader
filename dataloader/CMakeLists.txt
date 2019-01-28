@@ -102,7 +102,6 @@ IF (BUILD_PYTHON_MODULE)
             $<TARGET_FILE_DIR:cpploader>)
 ENDIF(BUILD_PYTHON_MODULE)
 
-
 ADD_EXECUTABLE(test_jit test_jit.cpp torchloader.cpp dataset.cpp ${DATALOADER_HDS} ${DATALOADER_SRC})
 TARGET_LINK_LIBRARIES(test_jit
     ${TurboJPEG_LIBRARIES}

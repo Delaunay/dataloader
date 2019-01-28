@@ -6,7 +6,6 @@
 // C++ API
 #include <torch/all.h>
 
-
 // Used for the C++ JIT side
 class TorchLoader{
 public:
