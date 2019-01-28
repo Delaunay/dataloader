@@ -24,8 +24,6 @@ public:
     std::atomic<double>         total_time_##name{0};\
     std::atomic<std::size_t>    total_size_##name{0};
 
-
-
     DEF_TIME_SIZE_PAIR(read)
     DEF_ADD_SIZE_PAIR_VAL(read)
 

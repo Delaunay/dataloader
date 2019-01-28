@@ -13,6 +13,8 @@ float sum(std::vector<Float> const* v){
     return s;
 }
 
+void ignore(Float){}
+
 int main(int argc, const char* argv[]){
     std::size_t vector_size = 100000000;
     std::size_t queue_size = 100;
@@ -62,7 +64,7 @@ int main(int argc, const char* argv[]){
     std::vector<Float> vec(vector_size, 2.0);
     std::vector<std::optional<std::shared_future<Float>>> results;
 
-    for(int i = 0; i < request_count; ++i){
+    for(std::size_t i = 0; i < request_count; ++i){
         while (pool.is_full()){
             std::this_thread::sleep_for(std::chrono::milliseconds(25));
         }
@@ -73,8 +75,8 @@ int main(int argc, const char* argv[]){
     for(auto& val : results){
         if (val.has_value()){
             val.value().wait();
-            Float f = val.value().get();
-            // printf("%.4f ", f);
+            volatile Float f = val.value().get();
+            ignore(f);
         } else{
             // printf("Error ");
         }

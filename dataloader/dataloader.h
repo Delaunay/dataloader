@@ -69,14 +69,12 @@ public:
             }
         }
 
-        // return std::max(prng(prng_engine) - 1, 0);
         return image_indices[i];
     }
 
     std::size_t epoch() const {
         return _epoch;
     }
-
 
     void send_next_batch(){
         std::vector<std::shared_future<Image>>& future_batch = future_buffered_batch[buffering_index];
@@ -100,10 +98,8 @@ public:
         buffering_index = (buffering_index + 1) % buffering;
     }
 
-    // should return a batch not an image
     std::vector<Image> get_next_item(){
         send_next_batch();
-
         return reduce_to_vector(get_future_batch());
     }
 
