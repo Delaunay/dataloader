@@ -69,7 +69,7 @@ int main(int argc, const char* argv[]){
     try{
         DLOG("Init data set");
         ImageFolder dataset(data_loc, true);
-        PyLoader dataloader(dataset, batch_size, thread_count, buffering, seed);
+        TorchLoader dataloader(dataset, batch_size, thread_count, buffering, seed);
 
         DLOG("Starting training");
         TimeIt loop_time;
@@ -87,7 +87,7 @@ int main(int argc, const char* argv[]){
 
         dataloader.report();
 
-    } catch (const std::filesystem::filesystem_error& e){
+    } catch (const FS_NAMESPACE::filesystem_error& e){
         printf("%s\n", e.what());
         return -1;
     }

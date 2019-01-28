@@ -33,6 +33,10 @@ SET(DATALOADER_SRC
 )
 
 find_package(TurboJPEG)
+
+add_definitions( -DBOOST_ALL_NO_LIB )
+add_definitions( -DBOOST_ALL_DYN_LINK )
+
 find_package(Boost COMPONENTS filesystem)
 
 include_directories(${TurboJPEG_INCLUDE_DIRS})
@@ -74,26 +78,36 @@ find_package(Torch)
 include_directories(${TORCH_INCLUDE_DIRS})
 include_directories(${Python_INCLUDE_DIRS})
 
-ADD_LIBRARY(cpploader MODULE pyloader.cpp torchloader.cpp torchloader.h ${DATALOADER_SRC})
-TARGET_LINK_LIBRARIES(cpploader PUBLIC
-    ${FILESYSTEM_LIB}
-    ${TurboJPEG_LIBRARIES}
-    ${TORCH_LIBRARIES}
-    # dataloader
-    pybind11::module
-)
-SET_PROPERTY(TARGET cpploader PROPERTY CXX_STANDARD 17)
-SET_PROPERTY(TARGET cpploader PROPERTY PREFIX "${PYTHON_MODULE_PREFIX}")
-SET_PROPERTY(TARGET cpploader PROPERTY SUFFIX "${PYTHON_MODULE_EXTENSION}")
+LINK_DIRECTORIES(/home/user1/local_mila/dataloader/dependencies/torch-cpu/)
 
-add_custom_command(TARGET cpploader POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${PROJECT_SOURCE_DIR}/dependencies/torch-cpu/lib"
-        $<TARGET_FILE_DIR:cpploader>)
+
+IF (BUILD_PYTHON_MODULE)
+    ADD_LIBRARY(cpploader MODULE pyloader.cpp pytorchloader.h torchloader.cpp ${DATALOADER_SRC})
+    TARGET_LINK_LIBRARIES(cpploader PUBLIC
+        ${FILESYSTEM_LIB}
+        ${TurboJPEG_LIBRARIES}
+        ${TORCH_LIBRARIES}
+        # dataloader
+        pybind11::module
+        # numpy stuff
+        torch_python
+    )
+    SET_PROPERTY(TARGET cpploader PROPERTY CXX_STANDARD 17)
+    SET_PROPERTY(TARGET cpploader PROPERTY PREFIX "${PYTHON_MODULE_PREFIX}")
+    SET_PROPERTY(TARGET cpploader PROPERTY SUFFIX "${PYTHON_MODULE_EXTENSION}")
+
+    add_custom_command(TARGET cpploader POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${PROJECT_SOURCE_DIR}/dependencies/torch-cpu/lib"
+            $<TARGET_FILE_DIR:cpploader>)
+ENDIF(BUILD_PYTHON_MODULE)
 
 
 ADD_EXECUTABLE(test_jit test_jit.cpp torchloader.cpp dataset.cpp ${DATALOADER_HDS} ${DATALOADER_SRC})
-TARGET_LINK_LIBRARIES(test_jit ${TurboJPEG_LIBRARIES} ${TORCH_LIBRARIES}
+TARGET_LINK_LIBRARIES(test_jit
+    ${TurboJPEG_LIBRARIES}
+    ${TORCH_LIBRARIES}
     ${Boost_FILESYSTEM_LIBRARY}
-    ${Boost_SYSTEM_LIBRARY})
+    ${Boost_SYSTEM_LIBRARY}
+)
 SET_PROPERTY(TARGET test_jit PROPERTY CXX_STANDARD 17)

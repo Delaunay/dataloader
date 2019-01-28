@@ -48,12 +48,13 @@ SET(${CXX_STANDARD_REQUIRED} ON)    # Comment out if C++11 is not mendatory
 # Project's Options
 # ====================================
 
-OPTION(BUILD_TESTING        "Enable tests"       OFF)
-OPTION(BUILD_BENCHMARK      "Build Benchmarks"   OFF)
-OPTION(BUILD_EXAMPLES       "Build Examples"     OFF)
-OPTION(BUILD_DOCUMENTATION  "Build docs"         OFF)
-OPTION(BUILD_DOXYGEN        "Build Doxygen docs" OFF)
-OPTION(BUILD_SPHINX         "Build Sphinx docs"  OFF)
+OPTION(BUILD_TESTING        "Enable tests"           OFF)
+OPTION(BUILD_BENCHMARK      "Build Benchmarks"       OFF)
+OPTION(BUILD_EXAMPLES       "Build Examples"         OFF)
+OPTION(BUILD_DOCUMENTATION  "Build docs"             OFF)
+OPTION(BUILD_DOXYGEN        "Build Doxygen docs"     OFF)
+OPTION(BUILD_SPHINX         "Build Sphinx docs"      OFF)
+OPTION(BUILD_PYTHON_MODULE  "Build Python Extension"  ON)
 
 # Binary/pre-compiled Dependencies
 # ====================================

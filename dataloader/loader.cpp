@@ -11,7 +11,7 @@
 #undef DLOG
 #define DLOG(...)
 
-Image single_threaded_loader(std::tuple<std::filesystem::path, int, std::size_t> const& item){
+Image single_threaded_loader(std::tuple<FS_NAMESPACE::path, int, std::size_t> const& item){
     ImageFolder::Path path; int label; std::size_t size;
     std::tie(path, label, size) = item;
 

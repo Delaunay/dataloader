@@ -7,7 +7,7 @@
 
 
 int main(){
-    using Path = std::filesystem::path;
+    using Path = FS_NAMESPACE::path;
     double total = 0;
     int count = 0;
     int total_size = 0;

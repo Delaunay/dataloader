@@ -2,8 +2,7 @@
 #include <torch/torch.h>
 
 
-
-torch::Tensor PyLoader::reduce_to_tensor(std::vector<std::shared_future<Image>>& future_batch){
+torch::Tensor TorchLoader::reduce_to_tensor(std::vector<std::shared_future<Image>>& future_batch){
     auto options =
       torch::TensorOptions()
         .dtype(torch::kUInt8)

@@ -4,16 +4,13 @@
 #include <string>
 #include <iostream>
 
-namespace fs = std::filesystem;
+
 
 ImageFolder::ImageFolder(std::string const& folder_name, ImageFolder::Loader const& loader, bool verbose):
     loader(loader), folder(folder_name)
 {
     TimeIt init_time;
-    std::cout << folder_name << std::endl;
-
-    ImageFolder::Path path = folder_name;
-    find_all_images(path);
+    find_all_images(folder_name);
     double time = init_time.stop();
 
     if (verbose){
@@ -25,19 +22,24 @@ ImageFolder::ImageFolder(std::string const& folder_name, ImageFolder::Loader con
 
 void ImageFolder::find_all_images(ImageFolder::Path const& folder_name, int class_index){
 
-    auto iterator = fs::directory_iterator(folder_name);
+    //boost::system::error_code code;
+    auto iterator = FS_NAMESPACE::directory_iterator(folder_name/*, code*/);
+
+    //if (code.value() != 0){
+    //    DLOG(code.message().c_str());
+    //}
 
     DLOG("Iterator Created");
 
-    for(fs::directory_entry const& entry: iterator){
-        if (is_directory(entry)){
+    for(FS_NAMESPACE::directory_entry const& entry: iterator){
+        if (kw::is_directory(entry)){
             int index = int(_classes_to_index.size());
 
             _classes_to_index[entry.path().string()] = index;
             find_all_images(entry, index);
 
-        } else if (is_regular_file(entry) && class_index != -1) {
-            _images.emplace_back(entry, class_index, file_size(entry));
+        } else if (kw::is_regular_file(entry) && class_index != -1) {
+            _images.emplace_back(entry, class_index, kw::file_size(entry));
         } else {
             std::cout << entry << " has no class skipping..." << std::endl;
         }

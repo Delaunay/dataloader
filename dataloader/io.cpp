@@ -6,7 +6,7 @@
 #define ERROR(msg) std::cout << msg << std::endl
 
 // load a file in one shot into a buffer
-std::vector<unsigned char> load_file(std::filesystem::path const& file_name, std::size_t file_size){
+std::vector<unsigned char> load_file(FS_NAMESPACE::path const& file_name, std::size_t file_size){
     FILE* file = fopen(file_name.c_str(), "r");
     std::vector<unsigned char> buffer(file_size);
 
