@@ -33,10 +33,6 @@ SET(DATALOADER_SRC
 )
 
 find_package(TurboJPEG)
-
-add_definitions( -DBOOST_ALL_NO_LIB )
-add_definitions( -DBOOST_ALL_DYN_LINK )
-
 find_package(Boost COMPONENTS filesystem)
 
 include_directories(${TurboJPEG_INCLUDE_DIRS})
@@ -78,10 +74,9 @@ find_package(Torch)
 include_directories(${TORCH_INCLUDE_DIRS})
 include_directories(${Python_INCLUDE_DIRS})
 
-LINK_DIRECTORIES(/home/user1/local_mila/dataloader/dependencies/torch-cpu/)
-
-
 IF (BUILD_PYTHON_MODULE)
+    LINK_DIRECTORIES(../dependencies/torch-cpu)
+
     ADD_LIBRARY(cpploader MODULE pyloader.cpp pytorchloader.h torchloader.cpp ${DATALOADER_SRC})
     TARGET_LINK_LIBRARIES(cpploader PUBLIC
         ${FILESYSTEM_LIB}
