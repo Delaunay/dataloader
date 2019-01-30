@@ -38,8 +38,8 @@ find_package(Boost COMPONENTS filesystem)
 include_directories(${TurboJPEG_INCLUDE_DIRS})
 
 set(FILESYSTEM_LIB
-    ${Boost_FILESYSTEM_LIBRARY}
-    ${Boost_SYSTEM_LIBRARY}
+    #${Boost_FILESYSTEM_LIBRARY}
+    #${Boost_SYSTEM_LIBRARY}
     stdc++fs
     pthread
 )
@@ -75,7 +75,7 @@ include_directories(${TORCH_INCLUDE_DIRS})
 include_directories(${Python_INCLUDE_DIRS})
 
 IF (BUILD_PYTHON_MODULE)
-    LINK_DIRECTORIES(../dependencies/torch-cpu)
+    LINK_DIRECTORIES(../dependencies/torch-cpu/lib)
 
     ADD_LIBRARY(cpploader MODULE pyloader.cpp pytorchloader.h torchloader.cpp ${DATALOADER_SRC})
     TARGET_LINK_LIBRARIES(cpploader PUBLIC
@@ -101,7 +101,6 @@ ADD_EXECUTABLE(test_jit test_jit.cpp torchloader.cpp dataset.cpp ${DATALOADER_HD
 TARGET_LINK_LIBRARIES(test_jit
     ${TurboJPEG_LIBRARIES}
     ${TORCH_LIBRARIES}
-    ${Boost_FILESYSTEM_LIBRARY}
-    ${Boost_SYSTEM_LIBRARY}
+    ${FILESYSTEM_LIB}
 )
 SET_PROPERTY(TARGET test_jit PROPERTY CXX_STANDARD 17)
