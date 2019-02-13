@@ -87,7 +87,9 @@ We can very clearly see that disk IO was the bottleneck in that case.
 
 # Compilation
 
-    
+* run and tested on gcc 8.2 with the -std=c++17 flag (depends on `<filesystem>`)
+
+
     git clone --recurse-submodules -j8 ...
     cd dataloader
 
