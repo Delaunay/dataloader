@@ -25,12 +25,6 @@ void ImageFolder::find_all_images(ImageFolder::Path const& folder_name, int clas
     //boost::system::error_code code;
     auto iterator = FS_NAMESPACE::directory_iterator(folder_name/*, code*/);
 
-    //if (code.value() != 0){
-    //    DLOG(code.message().c_str());
-    //}
-
-    DLOG("Iterator Created");
-
     for(FS_NAMESPACE::directory_entry const& entry: iterator){
         if (kw::is_directory(entry)){
             int index = int(_classes_to_index.size());

@@ -3,7 +3,6 @@
 #include <cmath>
 #include <cstdio>
 
-
 // Simple proportional scaling
 Image& Image::inplace_scale(int nw, int nh){
     std::vector<unsigned char> buffer(std::size_t(nw * nh * 3));
@@ -17,7 +16,6 @@ Image& Image::inplace_scale(int nw, int nh){
 
             std::size_t pixel = std::size_t(j * (nw * 3) + i * 3);
             std::size_t old_pix1 = std::size_t(std::floor(x) * (_width * 3.f) + std::floor(y) * 3.f);
-            //std::size_t old_pix2 = std::size_t(ceil(x) * (_width * 3.f) + ceil(y) * 3.f);
 
             buffer[pixel + 0] = _image[old_pix1 + 0]; // * (1 - ix) + _image[old_pix2 + 0] * ix;
             buffer[pixel + 1] = _image[old_pix1 + 1]; // * (1 - ix) + _image[old_pix2 + 1] * ix;

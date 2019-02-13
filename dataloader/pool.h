@@ -92,47 +92,17 @@ public:
 
         // make sure all worker stopped and are not stuck
         // on a task
-        if (safe)
+        if (safe){
             for(auto& worker: _workers){
-                DLOG("Joining worker thread");
+                DLOG("%s", "Joining worker thread");
                 worker.thread.join();
             }
-
-        live_time = run_time.stop();
-    }
-
-    void report() const {
-        double total_work = 0;
-        double total_idle = 0;
-        std::size_t task_count = 0;
-        live_time = run_time.stop();
-
-        printf("Thread Pool Report\n");
-        printf("   ID       WORK       IDLE   (%%)  TASKS  WORK/TASK\n");
-        for(int i = 0; i < _workers.size(); ++i){
-            double a = _workers[i].total_work_time;
-            double b = _workers[i].total_idle_time;
-            std::size_t c = _workers[i].task_count;
-
-            total_work += a;
-            total_idle += b;
-            task_count += c;
-
-            printf("%5d %10.4f %10.4f %6.2f %5lu %10.4f\n", i, a, b, 100.0 * a / (a + b), c, a / double(c));
         }
 
-        printf("Total %10.4f %10.4f %6.2f %5lu %10.4f\n",
-               total_work, total_idle, 100.0 * total_work / (total_idle + total_work),
-               task_count, total_work / double(task_count));
-
-        printf("\n                 TIME   (%%)\n");
-        printf("Empty Queue %9.2f %6.2f\n", total_empty_queue_time, total_empty_queue_time * 100.0 / live_time);
-        printf("Full  Queue %9.2f %6.2f\n", total_full_queue_time, total_full_queue_time * 100.0 / live_time);
-        printf("   All Time %9.2f %6.2f\n\n", live_time, 100.0);
-
-        printf("    Arrival Rate %9.2f\n", arrival_rate.mean());
-        printf("  Departure Rate %9.2f\n", deparature_rate.mean());
+        live_time = run_time.stop();
     }
+
+    void report() const;
 
     std::size_t size() const {
         return _queue.size();
@@ -173,7 +143,7 @@ private:
 
         static void run(WorkerThread* self){
             if (self == nullptr){
-                printf("Worker Thread badly initialized");
+                ELOG("%s", "Worker Thread badly initialized");
                 return;
             }
 
@@ -187,7 +157,7 @@ private:
                         Output val = task->work(task->in);
                         task->promise.set_value(val);
                     } catch (...){
-                        printf("Exception occured");
+                        ELOG("%s", "Exception occured inside worker thread");
                         task->promise.set_exception(std::current_exception());
                     }
 
@@ -201,7 +171,7 @@ private:
                 }
             }
 
-            DLOG("Worker Thread exiting");
+            DLOG("%s", "Worker Thread exiting");
         }
 
         ThreadPool* pool = nullptr;
@@ -239,6 +209,41 @@ private:
     RingBuffer<Task*> _queue;
     std::vector<WorkerThread> _workers;
 };
+
+
+template<typename Input, typename Output>
+void ThreadPool<Input, Output>::report() const {
+    double total_work = 0;
+    double total_idle = 0;
+    std::size_t task_count = 0;
+    live_time = run_time.stop();
+
+    printf("Thread Pool Report\n");
+    printf("   ID       WORK       IDLE   (%%)  TASKS  WORK/TASK\n");
+    for(int i = 0; i < _workers.size(); ++i){
+        double a = _workers[i].total_work_time;
+        double b = _workers[i].total_idle_time;
+        std::size_t c = _workers[i].task_count;
+
+        total_work += a;
+        total_idle += b;
+        task_count += c;
+
+        printf("%5d %10.4f %10.4f %6.2f %5lu %10.4f\n", i, a, b, 100.0 * a / (a + b), c, a / double(c));
+    }
+
+    printf("Total %10.4f %10.4f %6.2f %5lu %10.4f\n",
+           total_work, total_idle, 100.0 * total_work / (total_idle + total_work),
+           task_count, total_work / double(task_count));
+
+    printf("\n                 TIME   (%%)\n");
+    printf("Empty Queue %9.2f %6.2f\n", total_empty_queue_time, total_empty_queue_time * 100.0 / live_time);
+    printf("Full  Queue %9.2f %6.2f\n", total_full_queue_time, total_full_queue_time * 100.0 / live_time);
+    printf("   All Time %9.2f %6.2f\n\n", live_time, 100.0);
+
+    printf("    Arrival Rate %9.2f\n", arrival_rate.mean());
+    printf("  Departure Rate %9.2f\n", deparature_rate.mean());
+}
 
 
 #endif

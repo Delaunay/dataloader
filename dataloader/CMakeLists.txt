@@ -30,6 +30,7 @@ SET(DATALOADER_SRC
     buffer.cpp
     pool.cpp
     loader.cpp
+    runtime.cpp
 )
 
 find_package(TurboJPEG)
