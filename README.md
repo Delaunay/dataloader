@@ -89,33 +89,30 @@ We can very clearly see that disk IO was the bottleneck in that case.
 
 * run and tested on gcc 8.2 with the -std=c++17 flag (depends on `<filesystem>`)
 
+```
+git clone --recurse-submodules -j8 ...
+cd dataloader
 
-    git clone --recurse-submodules -j8 ...
-    cd dataloader
+# Get dependencies
+# ================
+# CPU
+mkdir -p dependencies/torch-cpu
+cd dependencies/torch-cpu
+wget https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-latest.zip
+unzip libtorch-shared-with-deps-latest.zip
 
-    # Get dependencies
-    # ================
-    # CPU
-    mkdir -p dependencies/torch-cpu
-    cd dependencies/torch-cpu
-    wget https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-latest.zip
-    unzip libtorch-shared-with-deps-latest.zip
+# GPU
+mkdir -p dependencies/torch-gpu
+cd dependencies/torch-gpu
+wget https://download.pytorch.org/libtorch/cu90/libtorch-shared-with-deps-latest.zip
+unzip libtorch-shared-with-deps-latest.zip 
 
-    # GPU
-    mkdir -p dependencies/torch-gpu
-    cd dependencies/torch-gpu
-    wget https://download.pytorch.org/libtorch/cu90/libtorch-shared-with-deps-latest.zip
-    unzip libtorch-shared-with-deps-latest.zip
+# Build
+mkdir build
+cd build
+cmake -DBUILDING_TEST=ON ..
+make
 
-    # Build
-    mkdir build
-    cd build
-    cmake -DBUILDING_TEST=ON ..
-    make
-
-    # Run tests
-    make test
-
-
-
-
+# Run tests
+make test
+```
