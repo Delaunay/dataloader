@@ -68,7 +68,7 @@ int main(int argc, const char* argv[]){
         }
 
         double loop = loop_time.stop();
-        RuntimeStats::stat().report(loop, thread_count);
+        RuntimeStats::stat().report(loop, thread_count, max_io_thread);
 
         dataloader.report();
 

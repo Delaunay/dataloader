@@ -37,3 +37,10 @@ dependencies/torch-gpu/
 dependencies/SDL/
 dependencies/SDL_ttf/
 .idea/
+
+
+dist/
+dataloader.egg-info/
+
+
+

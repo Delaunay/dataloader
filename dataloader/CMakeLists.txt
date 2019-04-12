@@ -30,6 +30,7 @@ SET(DATALOADER_SRC
     buffer.cpp
     pool.cpp
     loader.cpp
+    runtime.cpp
 )
 
 find_package(TurboJPEG)
@@ -67,7 +68,8 @@ executable(test_pool)
 add_test(NAME buffer COMMAND test_buffer)
 add_test(NAME pool COMMAND test_pool)
 
-SET(Torch_DIR  ../dependencies/torch-cpu/share/cmake/Torch)
+# ../dependencies/torch-cpu/libtorch/share/cmake/
+SET(Torch_DIR  ../dependencies/torch-cpu/libtorch/share/cmake/Torch)
 
 find_package(Torch)
 
@@ -75,7 +77,7 @@ include_directories(${TORCH_INCLUDE_DIRS})
 include_directories(${Python_INCLUDE_DIRS})
 
 IF (BUILD_PYTHON_MODULE)
-    LINK_DIRECTORIES(../dependencies/torch-cpu)
+    LINK_DIRECTORIES(../dependencies/torch-cpu/lib)
 
     ADD_LIBRARY(cpploader MODULE pyloader.cpp pytorchloader.h torchloader.cpp ${DATALOADER_SRC})
     TARGET_LINK_LIBRARIES(cpploader PUBLIC
@@ -101,7 +103,6 @@ ADD_EXECUTABLE(test_jit test_jit.cpp torchloader.cpp dataset.cpp ${DATALOADER_HD
 TARGET_LINK_LIBRARIES(test_jit
     ${TurboJPEG_LIBRARIES}
     ${TORCH_LIBRARIES}
-    ${Boost_FILESYSTEM_LIBRARY}
-    ${Boost_SYSTEM_LIBRARY}
+    ${FILESYSTEM_LIB}
 )
 SET_PROPERTY(TARGET test_jit PROPERTY CXX_STANDARD 17)

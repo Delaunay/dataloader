@@ -16,32 +16,32 @@ Image single_threaded_loader(std::tuple<FS_NAMESPACE::path, int, std::size_t> co
     std::tie(path, label, size) = item;
 
     // Read
-    DLOG("Waiting for IO resource");
+    DLOG("%s", "Waiting for IO resource");
     TimeIt io_block_time;
     start_io();
     RuntimeStats::stat().insert_io_block(io_block_time.stop());
 
-    DLOG("Reading bytes");
+    DLOG("%s", "Reading bytes");
     TimeIt read_time;
     auto jpeg = JpegImage(path.c_str(), size);
     end_io();
     RuntimeStats::stat().insert_read(read_time.stop(), size);
 
     Transform trans;
-    //trans.hflip();
+    trans.hflip();
 
     // Transform
     TimeIt transform_time;
     jpeg.inplace_transform(trans);
     RuntimeStats::stat().insert_transform(transform_time.stop(), jpeg.size());
 
-    DLOG("Decoding");
+    DLOG("%s", "Decoding");
     // decode
     TimeIt decode_time;
     Image img = jpeg.decode();
     RuntimeStats::stat().insert_decode(decode_time.stop(), img.size());
 
-    DLOG("Scaling");
+    DLOG("%s", "Scaling");
     // Scale
     TimeIt scale_time;
     img.inplace_scale(224, 224);
