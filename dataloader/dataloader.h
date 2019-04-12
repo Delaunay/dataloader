@@ -11,8 +11,8 @@
 #include <random>
 #include <algorithm>
 
-#undef DLOG
-#define DLOG(...)
+//#undef DLOG
+//#define DLOG(...)
 
 class DataLoader{
 public:
@@ -63,6 +63,7 @@ public:
 private:
     using Buffer = std::vector<char>;
     ThreadPool<int, Image> pool;
+    std::mutex _lock;
 
     std::vector<std::size_t> image_indices{dataset.size()};
 

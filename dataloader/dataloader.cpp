@@ -33,6 +33,8 @@ DataLoader::DataLoader(ImageFolder const& dataset, std::size_t batch_size_, std:
 }
 
 std::size_t DataLoader::get_next_image_index(){
+    std::lock_guard lock(_lock);
+
     std::size_t i = image_iterator;
     image_iterator += 1;
 

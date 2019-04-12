@@ -58,7 +58,9 @@ int main(int argc, const char* argv[]){
 
     make_io_lock(max_io_thread);
 
+    #ifdef USE_CPP
     try{
+    #endif
         ImageFolder dataset(data_loc, single_threaded_loader);
         DataLoader dataloader(dataset, batch_size, thread_count, buffering, seed);
 
@@ -72,10 +74,12 @@ int main(int argc, const char* argv[]){
 
         dataloader.report();
 
+    #ifdef USE_CPP
     } catch (const FS_NAMESPACE::filesystem_error& e){
         printf("%s\n", e.what());
         return -1;
     }
+    #endif
 
     return 0;
 }

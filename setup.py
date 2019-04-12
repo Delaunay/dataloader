@@ -30,7 +30,6 @@ setup(
             sources=files,
             extra_compile_args=['-std=c++17'],
             libraries = [
-                'boost_system', 
                 'boost_filesystem',
                 'turbojpeg'
             ]

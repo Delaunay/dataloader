@@ -9,6 +9,7 @@ parser.add_argument('--data', type=str)
 args = parser.parse_args()
 
 print('Setting up Image Folder')
+print(args.data)
 folder = cpploader.ImageFolder(args.data, True)
 
 print('Setting up  Loader')

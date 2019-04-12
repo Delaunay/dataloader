@@ -8,11 +8,13 @@
 #include "pool.h"
 #include "io.h"
 
-#undef DLOG
-#define DLOG(...)
+//#undef DLOG
+//#define DLOG(...)
 
-Image single_threaded_loader(std::tuple<FS_NAMESPACE::path, int, std::size_t> const& item){
-    ImageFolder::Path path; int label; std::size_t size;
+Image single_threaded_loader(std::tuple<std::string const&, int, std::size_t> const& item){
+    DLOG("Starting task");
+
+    std::string path; int label; std::size_t size;
     std::tie(path, label, size) = item;
 
     // Read
@@ -21,7 +23,7 @@ Image single_threaded_loader(std::tuple<FS_NAMESPACE::path, int, std::size_t> co
     start_io();
     RuntimeStats::stat().insert_io_block(io_block_time.stop());
 
-    DLOG("%s", "Reading bytes");
+    DLOG("%s", "Reading bytes", path);
     TimeIt read_time;
     auto jpeg = JpegImage(path.c_str(), size);
     end_io();

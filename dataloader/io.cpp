@@ -7,7 +7,7 @@
 
 // load a file in one shot into a buffer
 std::vector<unsigned char> load_file(FS_NAMESPACE::path const& file_name, std::size_t file_size){
-    FILE* file = fopen(file_name.c_str(), "r");
+    FILE* file = fopen(to_cstr(file_name), "r");
     std::vector<unsigned char> buffer(file_size);
 
     std::size_t read_size = fread(&buffer[0], sizeof(unsigned char), file_size, file);
