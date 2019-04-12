@@ -1,61 +1,42 @@
+from setuptools import setup
+from torch.utils.cpp_extension import CppExtension, BuildExtension
 
-import os
-import pathlib
+import glob
 
-from setuptools import setup, Extension
-from setuptools.command.build_ext import build_ext as build_ext_orig
+excluded_files = {'io_benchmark.cpp', 'main.cpp'}
+
+def is_wanted(file_name):
+    wanted = 'test' not in file_name
+
+    if wanted:
+        for excluded in excluded_files:
+            if excluded in file_name:
+                return False
+
+    return wanted
 
 
-class CMakeExtension(Extension):
+files = glob.glob('dataloader/*.cpp')
+files = list(filter(is_wanted, files))
 
-    def __init__(self, name):
-        # don't invoke the original build_ext for this special extension
-        super().__init__(name, sources=[])
-
-
-class build_ext(build_ext_orig):
-
-    def run(self):
-        for ext in self.extensions:
-            self.build_cmake(ext)
-        super().run()
-
-    def build_cmake(self, ext):
-        cwd = pathlib.Path().absolute()
-
-        # these dirs will be created in build_py, so if you don't have
-        # any python sources to bundle, the dirs will be missing
-        build_temp = pathlib.Path(self.build_temp)
-        build_temp.mkdir(parents=True, exist_ok=True)
-        extdir = pathlib.Path(self.get_ext_fullpath(ext.name))
-        extdir.mkdir(parents=True, exist_ok=True)
-
-        # example of cmake args
-        config = 'Debug' if self.debug else 'Release'
-        cmake_args = [
-            '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + str(extdir.parent.absolute()),
-            '-DCMAKE_BUILD_TYPE=' + config
-        ]
-
-        # example of build args
-        build_args = [
-            '--config', config,
-            '--', '-j4'
-        ]
-
-        os.chdir(str(build_temp))
-        self.spawn(['cmake', str(cwd)] + cmake_args)
-        if not self.dry_run:
-            self.spawn(['cmake', '--build', '.'] + build_args)
-        os.chdir(str(cwd))
-
+for f in files:
+    print(f)
 
 setup(
-    name='dataloader',
-    version='0.1',
-    packages=['dataloader'],
-    ext_modules=[CMakeExtension('dataloader/cpploader')],
+    name='cpploader',
+    ext_modules=[
+        CppExtension(
+            name='cpploader', 
+            sources=files,
+            extra_compile_args=['-std=c++17'],
+            libraries = [
+                'boost_system', 
+                'boost_filesystem',
+                'turbojpeg'
+            ]
+        )
+    ],
     cmdclass={
-        'build_ext': build_ext,
+        'build_ext': BuildExtension
     }
 )
