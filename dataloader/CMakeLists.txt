@@ -39,8 +39,8 @@ find_package(Boost COMPONENTS filesystem)
 include_directories(${TurboJPEG_INCLUDE_DIRS})
 
 set(FILESYSTEM_LIB
-    #${Boost_FILESYSTEM_LIBRARY}
-    #${Boost_SYSTEM_LIBRARY}
+    ${Boost_FILESYSTEM_LIBRARY}
+    ${Boost_SYSTEM_LIBRARY}
     stdc++fs
     pthread
 )
@@ -68,7 +68,8 @@ executable(test_pool)
 add_test(NAME buffer COMMAND test_buffer)
 add_test(NAME pool COMMAND test_pool)
 
-SET(Torch_DIR  ../dependencies/torch-cpu/share/cmake/Torch)
+# ../dependencies/torch-cpu/libtorch/share/cmake/
+SET(Torch_DIR  ../dependencies/torch-cpu/libtorch/share/cmake/Torch)
 
 find_package(Torch)
 

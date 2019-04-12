@@ -1,6 +1,6 @@
 #include "runtime.h"
 
-void RuntimeStats::report(double loop, double thread_count){
+void RuntimeStats::report(double loop, double thread_count, int max_io_thread){
     int count_image = int(total_count_image);
     printf("---------------------------------------------------\n");
     printf("                    REPORT\n");
@@ -13,18 +13,18 @@ void RuntimeStats::report(double loop, double thread_count){
 
     printf("        Per Thread     |  Overall\n");
 
-#define REPORT(num, name)\
+#define REPORT(num, name, thd_count)\
     printf(#num ". " #name " %d images\n", count_image);\
-    printf(" - %10.4f      sec | %10.4f      sec\n", total_time_##name.load(), total_time_##name.load() / thread_count);\
-    printf(" - %10.4f file/sec | %10.4f file/sec\n", count_image / total_time_##name.load(), count_image / (total_time_##name.load() / thread_count));\
+    printf(" - %10.4f      sec | %10.4f      sec\n", total_time_##name.load(), total_time_##name.load() / thd_count);\
+    printf(" - %10.4f file/sec | %10.4f file/sec\n", count_image / total_time_##name.load(), count_image / (total_time_##name.load() / thd_count));\
     printf(" - %10.4f   Mo/sec | %10.4f   Mo/sec\n", \
         (total_size_##name.load() / 1024 / 1024) / total_time_##name.load(),\
-        (total_size_##name.load() / 1024 / 1024) / (total_time_##name.load() / thread_count));
+        (total_size_##name.load() / 1024 / 1024) / (total_time_##name.load() / thd_count));
 
-    REPORT(1, read);
-    REPORT(2, transform);
-    REPORT(3, decode);
-    REPORT(4, scaling);
+    REPORT(1, read, max_io_thread);
+    REPORT(2, transform, thread_count);
+    REPORT(3, decode, thread_count);
+    REPORT(4, scaling, thread_count);
 
 #undef REPORT
 

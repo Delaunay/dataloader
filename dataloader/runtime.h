@@ -77,7 +77,7 @@ public:
         return total_time_read + total_time_decode + total_time_scaling + total_time_transform;
     }
 
-    void report(double loop, double thread_count = 1);
+    void report(double loop, double thread_count = 1, int max_io_thread=1);
 
 private:
     RuntimeStats() = default;
