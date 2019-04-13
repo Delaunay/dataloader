@@ -1,10 +1,13 @@
 #ifndef DATALOADER_TORCHLOADER_HEADER_H
 #define DATALOADER_TORCHLOADER_HEADER_H
 
-#include "dataloader.h"
+#include <torch/extension.h>
 
-// C++ API
-#include <torch/all.h>
+#include "dataloader.h"
+#include "utils.h"
+
+#undef DLOG
+#define DLOG(...)
 
 // Used for the C++ JIT side
 class TorchLoader{
@@ -20,7 +23,7 @@ public:
 
     std::size_t const img_size = 3 * 224 * 224;
 
-    torch::Tensor reduce_to_tensor(std::vector<std::shared_future<Image>>& future_batch);
+    torch::Tensor reduce_to_tensor(std::vector<Image> const& future_batch);
 
     void report() const {
         loader.report();

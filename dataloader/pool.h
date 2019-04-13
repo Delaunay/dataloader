@@ -1,11 +1,12 @@
 #ifndef DATALOADER_POOL_HEADER_H
 #define DATALOADER_POOL_HEADER_H
 
-#include "utils.h"
 #include "buffer.h"
 
 #include <functional>
 #include <future>
+
+#include "utils.h"
 
 #undef DLOG
 #define DLOG(...)
@@ -41,6 +42,7 @@ public:
     ThreadPool(std::size_t worker_num, std::size_t max_request):
         _queue(max_request, []() { return nullptr; })
     {
+        DLOG("Initialize Thread pool");
         _workers.reserve(worker_num);
         for(int i = 0; i < worker_num; ++i)
             _workers.emplace_back(this);
@@ -95,11 +97,23 @@ public:
         if (safe){
             for(auto& worker: _workers){
                 DLOG("%s", "Joining worker thread");
-                worker.thread.join();
+                try{
+                    worker.thread->join();
+                    delete worker.thread;
+                } catch (std::exception const& e){
+                    ELOG("Exception occured while shutting down `%s`", e.what());
+                }
             }
         }
 
         live_time = run_time.stop();
+
+        // remove tasks if some are left
+        Task* task = next_task();
+        while(task != nullptr){
+            delete task;
+            task = next_task();
+        }
     }
 
     void report() const;
@@ -138,7 +152,7 @@ private:
 
     struct WorkerThread{
         WorkerThread(ThreadPool* pool):
-            pool(pool), thread(WorkerThread::run, this), running(true)
+            pool(pool), thread(new std::thread(WorkerThread::run, this)), running(true)
         {}
 
         static void run(WorkerThread* self){
@@ -156,7 +170,8 @@ private:
                     try{
                         Output val = task->work(task->in);
                         task->promise.set_value(val);
-                    } catch (...){
+                    } catch (std::exception const& e){
+                        ELOG(e.what());
                         ELOG("%s", "Exception occured inside worker thread");
                         task->promise.set_exception(std::current_exception());
                     }
@@ -175,7 +190,7 @@ private:
         }
 
         ThreadPool* pool = nullptr;
-        std::thread thread;
+        std::thread* thread = nullptr;
 
         bool running = true;
 

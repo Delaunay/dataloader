@@ -4,7 +4,6 @@
 #include "ffilesystem.h"
 #include "image.h"
 #include "loader.h"
-#include "utils.h"
 
 #include <future>
 #include <unordered_map>
@@ -12,10 +11,12 @@
 #include <vector>
 #include <string>
 #include <functional>
-
 #include <cassert>
 
-#include <iostream>
+#include "utils.h"
+
+#undef DLOG
+#define DLOG(...)
 
 // Mirror Pytorch ImageFolder
 // except it does not do the transformation this should be done in the loader
@@ -23,7 +24,7 @@ class ImageFolder{
 public:
     using Path = FS_NAMESPACE::path;
     using LoaderReturnType = Image;
-    using Loader = std::function<LoaderReturnType(std::tuple<std::string const&, int, std::size_t> const& item)>;
+    using Loader = std::function<LoaderReturnType(std::tuple<std::string, int, std::size_t> const& item)>;
 
     ImageFolder(std::string const& folder_name, Loader const& loader, bool verbose=true);
 
@@ -42,7 +43,7 @@ public:
         return _images.size();
     }
 
-    std::vector<std::tuple<std::string const&, int, std::size_t>> const& samples() const {
+    std::vector<std::tuple<std::string, int, std::size_t>> const& samples() const {
         return _images;
     }
     std::unordered_map<std::string, int> const& classes_to_label() const {
@@ -53,7 +54,7 @@ public:
     std::string const folder;
 private:
 
-    std::vector<std::tuple<std::string const&, int, std::size_t>> _images;
+    std::vector<std::tuple<std::string, int, std::size_t>> _images;
     std::unordered_map<std::string, int> _classes_to_index;
 
 private:

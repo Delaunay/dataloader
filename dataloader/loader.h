@@ -4,6 +4,6 @@
 #include "image.h"
 #include "ffilesystem.h"
 
-Image single_threaded_loader(std::tuple<std::string const&, int, std::size_t> const& item);
+Image single_threaded_loader(std::tuple<std::string, int, std::size_t> const& item);
 
 #endif

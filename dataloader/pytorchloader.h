@@ -14,8 +14,8 @@ public:
     {}
 
     // return a NCHW ui8 tensor
-    PyObject* get_next_item(){
-        return to_numpy(loader.get_next_item());
+    at::Tensor get_next_item(){
+        return loader.get_next_item();
     }
 
     PyObject* to_numpy(at::Tensor const& tensor){

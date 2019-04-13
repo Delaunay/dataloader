@@ -1,18 +1,18 @@
 #ifndef DATALOADER_DATALOADER_HEADER_H
 #define DATALOADER_DATALOADER_HEADER_H
 
-#include "utils.h"
 #include "dataset.h"
 #include "pool.h"
 #include "runtime.h"
 #include "io.h"
 
-
 #include <random>
 #include <algorithm>
 
-//#undef DLOG
-//#define DLOG(...)
+#include "utils.h"
+
+#undef DLOG
+#define DLOG(...)
 
 class DataLoader{
 public:
@@ -54,9 +54,9 @@ public:
         pool.shutdown();
     }
 
-    std::vector<std::shared_future<Image>>& get_future_batch();
+    std::vector<Image> get_future_batch();
 
-    std::vector<Image> reduce_to_vector(std::vector<std::shared_future<Image>>& future_batch);
+    std::vector<Image> reduce_to_vector(std::vector<Image> const& future_batch);
 
     void shuffle();
 

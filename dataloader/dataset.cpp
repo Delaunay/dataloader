@@ -4,7 +4,8 @@
 #include <string>
 #include <iostream>
 
-
+#undef DLOG
+#define DLOG(...)
 
 ImageFolder::ImageFolder(std::string const& folder_name, ImageFolder::Loader const& loader, bool verbose):
     loader(loader), folder(folder_name)
@@ -28,8 +29,8 @@ void ImageFolder::find_all_images(ImageFolder::Path const& folder_name, int clas
     DLOG("find_all_images");
     auto iterator = FS_NAMESPACE::directory_iterator(folder_name/*, code*/);
 
+    DLOG("Build DB");
     for(FS_NAMESPACE::directory_entry const& entry: iterator){
-
         if (kw::is_directory(entry)){
             class_index = int(_classes_to_index.size());
             _classes_to_index[FS_NAMESPACE::to_string(entry)] = class_index;

@@ -65,6 +65,7 @@ executable(io_benchmark)
 executable(test_buffer)
 executable(test_pool)
 executable(test_directory_iterator)
+executable(test_dataset)
 
 add_test(NAME buffer COMMAND test_buffer)
 add_test(NAME pool COMMAND test_pool)

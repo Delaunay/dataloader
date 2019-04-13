@@ -3,19 +3,19 @@
 
 #include "dataloader.h"
 #include "jpeg.h"
-#include "utils.h"
 #include "runtime.h"
 #include "pool.h"
 #include "io.h"
 
-//#undef DLOG
-//#define DLOG(...)
+#include "utils.h"
 
-Image single_threaded_loader(std::tuple<std::string const&, int, std::size_t> const& item){
-    DLOG("Starting task");
+#undef DLOG
+#define DLOG(...)
 
+Image single_threaded_loader(std::tuple<std::string, int, std::size_t> const& item){
     std::string path; int label; std::size_t size;
     std::tie(path, label, size) = item;
+    DLOG("Starting task %s %i %lu", path.c_str(), label, size);
 
     // Read
     DLOG("%s", "Waiting for IO resource");

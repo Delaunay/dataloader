@@ -104,5 +104,9 @@ public:
     }
 };
 
-
+#else
+#undef DLOG
+#undef ELOG
+#define DLOG(...) print_log(__VA_ARGS__)
+#define ELOG(...) print_log(__VA_ARGS__)
 #endif

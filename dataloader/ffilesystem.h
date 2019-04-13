@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstddef>
 
+#include "utils.h"
 
 #ifdef USE_CPP
 #if defined(__has_include)
@@ -32,9 +33,11 @@ std::size_t file_size(FS_NAMESPACE::directory_entry const& entry);
 
 namespace cfs {
 struct Entry{
-    Entry(const char* name, bool is_file, std::size_t size):
-        name(name), is_file(is_file), size(size)
-    {}
+    Entry(std::string const& name_, bool is_file_, std::size_t size_):
+        name(name_), is_file(is_file_), size(size_)
+    {
+        //DLOG(name.c_str());
+    }
 
     Entry() = default;
 

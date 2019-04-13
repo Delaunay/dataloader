@@ -1,10 +1,10 @@
 #include <pybind11/pybind11.h>
-
+#include <torch/extension.h>
 #include "pytorchloader.h"
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(cpploader, m) {
+PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
     py::class_<ImageFolder>(m, "ImageFolder")
             .def(py::init<const std::string&, bool>());
 

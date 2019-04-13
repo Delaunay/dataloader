@@ -66,7 +66,7 @@ int main(int argc, const char* argv[]){
     DLOG("Reading Pytorch model to jit");
     std::shared_ptr<torch::jit::script::Module> module = torch::jit::load(model_file);
 
-    try{
+    //try{
         DLOG("Init data set");
         ImageFolder dataset(data_loc, true);
         TorchLoader dataloader(dataset, batch_size, thread_count, buffering, seed);
@@ -86,11 +86,11 @@ int main(int argc, const char* argv[]){
         RuntimeStats::stat().report(loop, thread_count);
 
         dataloader.report();
-
+    /*
     } catch (const FS_NAMESPACE::filesystem_error& e){
         printf("%s\n", e.what());
         return -1;
-    }
+    }*/
 
 
     return 0;

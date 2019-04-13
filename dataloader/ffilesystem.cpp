@@ -62,10 +62,12 @@ void directory_iterator_rec(path p, std::vector<Entry>& files, int depth, char* 
             DLOG("Not a directory returning");
             return;
         }
-        files.emplace_back(p, true, std::size_t(st.st_size));
+        //printf("%s\n", p);
+        files.emplace_back(std::string(p), true, std::size_t(st.st_size));
         return;
     } else if (depth != 0){
-        files.emplace_back(p, false, 0);
+        //printf("%s\n", p);
+        files.emplace_back(std::string(p), false, 0);
     }
 
     size_t len = strlen(p);
@@ -80,7 +82,10 @@ void directory_iterator_rec(path p, std::vector<Entry>& files, int depth, char* 
             continue;
 
         strncpy(str + len, dent->d_name, FILENAME_MAX - len);
+        str[len + strlen(dent->d_name)] = '\0';
+
         directory_iterator_rec(str, files, depth + 1, str);
+        str[len + strlen(dent->d_name)] = '\0';
     }
     closedir(dir);
 }

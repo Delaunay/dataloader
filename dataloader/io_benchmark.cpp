@@ -22,8 +22,8 @@ int main(int argc, const char* argv[]){
     std::size_t buffering = 3;
     std::size_t max_io_thread = 4;
 
-    const char* data_loc = "/home/user1/test_database/imgnet/ImageNet2012_jpeg/train/";
-    //const char* data_loc = "/media/setepenre/UserData/tmp/fake";
+    //const char* data_loc = "/home/user1/test_database/imgnet/ImageNet2012_jpeg/train/";
+    const char* data_loc = "/media/setepenre/UserData/tmp/fake";
 
     for(int i = 0; i < argc; ++i){
         std::string arg = std::string(argv[i]);
