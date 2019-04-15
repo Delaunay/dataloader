@@ -11,8 +11,8 @@
 
 #include "utils.h"
 
-#undef DLOG
-#define DLOG(...)
+//#undef DLOG
+//#define DLOG(...)
 
 class DataLoader{
 public:
@@ -67,7 +67,10 @@ private:
 
     std::vector<std::size_t> image_indices{dataset.size()};
 
-    std::vector<std::vector<std::shared_future<Image>>> future_buffered_batch;
+    using FutureBatch = std::vector<std::shared_future<Image>>;
+    using FutureBatchPtr = std::unique_ptr<FutureBatch>;
+
+    std::vector<FutureBatchPtr> future_buffered_batch;
     std::size_t buffering_index = 0;
     std::size_t next_batch = 0;
 

@@ -19,14 +19,15 @@ DataLoader::DataLoader(ImageFolder const& dataset, std::size_t batch_size_, std:
 
     shuffle();
 
-    future_buffered_batch = std::vector<std::vector<std::shared_future<Image>>>(buffering);
+    // std::vector<FutureBatchPtr>
+    future_buffered_batch = std::vector<FutureBatchPtr>(buffering);
 
-    for(std::size_t i = 0; i < buffering; ++i){
-       future_buffered_batch[i] = std::vector<std::shared_future<Image>>(batch_size);
-    }
+    //for(std::size_t i = 0; i < buffering; ++i){
+    //   future_buffered_batch[i] = std::vector<std::shared_future<Image>>(batch_size);
+    //}
 
     DLOG("%s", "Starting the load image request");
-    for(std::size_t i = 1; i < buffering; ++i){
+    for(std::size_t i = 0; i < buffering; ++i){
        send_next_batch();
     }
 }
@@ -34,7 +35,7 @@ DataLoader::DataLoader(ImageFolder const& dataset, std::size_t batch_size_, std:
 std::size_t DataLoader::get_next_image_index(){
     DLOG("get_next_image_index");
 
-    std::lock_guard lock(_lock);
+    //std::lock_guard lock(_lock);
 
     std::size_t i = image_iterator;
     image_iterator += 1;
@@ -52,12 +53,19 @@ std::size_t DataLoader::get_next_image_index(){
 }
 
 void DataLoader::send_next_batch(){
-    DLOG("send_next_batch");
+    //std::lock_guard lock(_lock);
 
-    std::vector<std::shared_future<Image>>& future_batch = future_buffered_batch[buffering_index % buffering];
-    buffering_index += 1;
+    DLOG("send_next_batch %d", buffering_index % buffering);
+
+    if (future_buffered_batch[buffering_index] == nullptr){
+        future_buffered_batch[buffering_index] = std::make_unique<FutureBatch>(batch_size);
+    }
+
+    FutureBatch& future_batch = *future_buffered_batch[buffering_index].get();
+    buffering_index = (buffering_index + 1) % buffering;
 
     TimeIt schedule_time;
+
     for(std::size_t i = 0; i < batch_size;){
         int index = int(get_next_image_index());
 
@@ -81,8 +89,10 @@ std::vector<Image> DataLoader::get_next_item(){
 }
 
 std::vector<Image> DataLoader::get_future_batch(){
-    DLOG("%s", "Waiting for images");
-    std::vector<std::shared_future<Image>>& future_batch = future_buffered_batch[next_batch % buffering];
+    //std::lock_guard lock(_lock);
+
+    DLOG("%s %d", "Waiting for images", next_batch % buffering);
+    FutureBatch& future_batch = *future_buffered_batch[next_batch].get();
     std::vector<Image> result;
     result.reserve(future_batch.size());
 
@@ -92,14 +102,19 @@ std::vector<Image> DataLoader::get_future_batch(){
         std::shared_future<Image>& fut = future_batch[i];
         try{
             fut.wait();
+            DLOG("Pushing Result");
             result.push_back(fut.get());
         } catch (std::exception const& e){
             DLOG(e.what());
             //std::abort();
         }
     }
+
+    DLOG("test");
+    future_buffered_batch[next_batch] = nullptr;
+    next_batch += (next_batch + 1) % buffering;
+    DLOG("test");
     RuntimeStats::stat().insert_batch(batch_time.stop(), batch_size);
-    next_batch += 1;
     DLOG("%s", "Images ready");
     return result;
 }

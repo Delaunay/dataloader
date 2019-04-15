@@ -17,6 +17,7 @@ SET(DATALOADER_HDS
     buffer.h
     pool.h
     loader.h
+    dataloader2.h
 )
 
 SET(DATALOADER_SRC
@@ -31,6 +32,7 @@ SET(DATALOADER_SRC
     pool.cpp
     loader.cpp
     runtime.cpp
+    dataloader2.cpp
 )
 
 find_package(TurboJPEG)

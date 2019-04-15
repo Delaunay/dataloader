@@ -1,5 +1,6 @@
 #include "dataset.h"
 #include "dataloader.h"
+#include "dataloader2.h"
 #include "jpeg.h"
 #include "utils.h"
 #include "runtime.h"
@@ -62,7 +63,7 @@ int main(int argc, const char* argv[]){
     try{
     #endif
         ImageFolder dataset(data_loc, single_threaded_loader);
-        DataLoader dataloader(dataset, batch_size, thread_count, buffering, seed);
+        DataLoader2 dataloader(dataset, batch_size, thread_count, buffering, seed);
 
         TimeIt loop_time;
         for(int i = 0; i < image_to_load; ++i){

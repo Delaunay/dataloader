@@ -38,7 +38,7 @@ s = time.time()
 for i in range(0, args.count):
     print(i)
     b = loader.next()
-    print(b.shape)
+    print(b[0, 0, 0, 0])
 
 e = time.time()
 
