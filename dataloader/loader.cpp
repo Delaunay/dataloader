@@ -41,10 +41,12 @@ Image single_threaded_loader(std::tuple<std::string, int, std::size_t> const& it
     Image img = jpeg.decode();
     RuntimeStats::stat().insert_decode(decode_time.stop(), img.size());
 
-    DLOG("%s", "Scaling");
+    DLOG("%s - %d", "Scaling", int(img(112, 112)));
     // Scale
     TimeIt scale_time;
     img.inplace_scale(224, 224);
+
+    DLOG("%s - %d", "Scaled", int(img(112, 112)));
 
     RuntimeStats::stat().insert_scaling(scale_time.stop(), img.size());
     RuntimeStats::stat().increment_count();

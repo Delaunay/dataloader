@@ -17,14 +17,15 @@ public:
     {}
 
     // return a NCHW ui8 tensor
-    at::Tensor get_next_item(){
-        auto batch = loader.get_next_item();
+    std::tuple<at::Tensor, at::Tensor> get_next_item(){
+        std::tuple<std::vector<uint8_t>, std::vector<int>> batch = loader.get_next_item();
+
         return reduce_to_tensor(batch);
     }
 
     std::size_t const img_size = 3 * 224 * 224;
 
-    torch::Tensor reduce_to_tensor(std::vector<uint8_t> const& future_batch);
+    std::tuple<torch::Tensor, torch::Tensor> reduce_to_tensor(const std::tuple<std::vector<uint8_t>, std::vector<int>> &future_batch);
 
     void report() const {
         loader.report();

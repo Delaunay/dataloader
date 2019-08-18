@@ -74,7 +74,7 @@ public:
         shuffle();
 
         memory_pool = std::vector<uint8_t>(batch_size_ * image_size() * buffering_);
-        image_ready = std::vector<uint8_t>(batch_size_ * buffering_, 0);
+        image_ready = std::vector<int>(batch_size_ * buffering_, -1);
 
         for(int i = 0; i < buffering_; ++i){
             DLOG("%s", "send batch request");
@@ -95,19 +95,16 @@ public:
         return MappedStorage<uint8_t>(memory_pool.data() + idx * size, size);
     }
 
-    void mark_ready(int idx){
-        //DLOG("mark ready %d", idx);
-        image_ready[idx] = true;
+    void mark_ready(int idx, int label){
+        image_ready[idx] = label;
     }
 
     void mark_empty(int idx){
-        //DLOG("mark empty %d", idx);
-        image_ready[idx] = false;
+        image_ready[idx] = -1;
     }
 
     bool is_ready(int idx) const {
-        DLOG("check ready %d => %d", idx, image_ready[idx]);
-        return image_ready[idx];
+        return image_ready[idx] != -1;
     }
 
     MappedStorage<uint8_t> batch_mem(int idx){
@@ -124,7 +121,7 @@ public:
 
     void send_next_batch();
 
-    std::vector<uint8_t> get_next_item();
+    std::tuple<std::vector<uint8_t>, std::vector<int>> get_next_item();
 
     ~DataLoader(){
         pool.shutdown();
@@ -147,7 +144,7 @@ public:
         pool.shutdown();
     }
 
-    std::vector<uint8_t> get_future_batch();
+    std::tuple<std::vector<uint8_t>, std::vector<int>> get_future_batch();
 
     void shuffle();
 
@@ -167,7 +164,7 @@ private:
     // the loader pool the flag until it is ready
     // there is no concurrent write in the image index so we do not need to lock it
     // cant be a vector<bool> because then the update is not atomic
-    std::vector<uint8_t>  image_ready;
+    std::vector<int>  image_ready;
 
     std::size_t sent_batch = 0;
     std::size_t retrieve_batch = 0;

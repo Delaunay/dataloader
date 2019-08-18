@@ -32,6 +32,10 @@ public:
         return _image.data();
     }
 
+    unsigned char operator() (int x, int y) const{
+        return _image[x * _width + y];
+    }
+
 private:
     std::vector<unsigned char> _image;
     int _width = 0;

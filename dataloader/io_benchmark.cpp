@@ -64,8 +64,8 @@ int main(int argc, const char* argv[]){
 
     TimeIt loop_time;
     for(int i = 0; i < image_to_load; ++i){
-        auto img = dataloader.get_next_item();
-        std::cout << i << " => " << int(img[0]) << std::endl;
+        auto batch = dataloader.get_next_item();
+        std::cout << i << std::endl;
     }
 
     double loop = loop_time.stop();

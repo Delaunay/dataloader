@@ -75,7 +75,10 @@ int main(int argc, const char* argv[]){
         TimeIt loop_time;
         for(int i = 0; i < image_to_load; ++i){
             std::vector<torch::jit::IValue> inputs;
-            inputs.push_back(dataloader.get_next_item());
+            std::tuple<torch::Tensor, torch::Tensor> in = dataloader.get_next_item();
+
+            inputs.push_back(std::get<0>(in));
+            inputs.push_back(std::get<1>(in));
 
             at::Tensor out = module.forward(inputs).toTensor();
 

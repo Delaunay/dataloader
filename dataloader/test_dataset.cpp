@@ -10,9 +10,9 @@ int main(){
         std::cout << std::get<0>(item) << " " << std::get<1>(item) << " " << std::get<2>(item) << std::endl;
     }
 
-    Image const &  item = dataset.get_item(0);
+    auto item = dataset.get_item(0);
 
-    std::cout << item.size() << std::endl;
+    std::cout << std::get<0>(item).size() << std::endl;
 
     return 0;
 }

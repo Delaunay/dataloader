@@ -23,8 +23,7 @@
 class ImageFolder{
 public:
     using Path = FS_NAMESPACE::path;
-    using LoaderReturnType = Image;
-    using Loader = std::function<LoaderReturnType(std::tuple<std::string, int, std::size_t> const& item)>;
+    using Loader = std::function<Image(std::tuple<std::string, int, std::size_t> const& item)>;
 
     ImageFolder(std::string const& folder_name, Loader const& loader, bool verbose=true);
 
@@ -34,9 +33,10 @@ public:
         DLOG("ImageFolder Delegate Ctor");
     }
 
-    LoaderReturnType get_item(int index) const{
+    std::tuple<Image, int> get_item(int index) const{
         assert(index >= 0  && std::size_t(index) < _images.size() && "image index out of bounds");
-        return loader(_images[std::size_t(index)]);
+        auto img_ref = _images[std::size_t(index)];
+        return std::make_tuple(loader(img_ref), std::get<1>(img_ref));
     }
 
     std::size_t size() const {
@@ -54,6 +54,7 @@ public:
     std::string const folder;
 private:
 
+    // Vector[path, label, size]
     std::vector<std::tuple<std::string, int, std::size_t>> _images;
     std::unordered_map<std::string, int> _classes_to_index;
 

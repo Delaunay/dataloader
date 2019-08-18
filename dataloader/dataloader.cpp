@@ -6,7 +6,7 @@
 #include <thread>
 
 
-std::vector<uint8_t> DataLoader::get_next_item(){
+std::tuple<std::vector<uint8_t>, std::vector<int> > DataLoader::get_next_item(){
     DLOG("getting batch");
     auto ret = get_future_batch();
 
@@ -52,13 +52,14 @@ void DataLoader::send_next_batch(){
             MappedStorage<uint8_t> mem = image_mem(img_index);
 
             // read image
-            Image im = dataset.get_item(index);
+            std::tuple<Image, int> sample = dataset.get_item(index);
 
             // Copy to storage
-            memcpy(mem.data(), im.data(), mem.size());
+            assert(mem.size() == std::get<0>(sample).size());
+            memcpy(mem.data(), std::get<0>(sample).data(), mem.size());
 
             // Image is ready to be consumed
-            mark_ready(img_index);
+            mark_ready(img_index, std::get<1>(sample));
             DLOG(">> Image (id: %d) is ready", img_index);
             return true;
         });
@@ -76,12 +77,13 @@ void DataLoader::send_next_batch(){
     DLOG("< Done sending work (sending_batch_id: %d)", sent_batch);
 }
 
-std::vector<uint8_t> DataLoader::get_future_batch(){
+std::tuple<std::vector<uint8_t>, std::vector<int>> DataLoader::get_future_batch(){
     // copy out of the dataloader so the memory can be reused
     // The user becomes now the owner of the data
     DLOG("> Waiting for images (retrieve_batch_id: %d) (sending_batch_id: %d)", retrieve_batch, sent_batch);
 
     std::vector<uint8_t> result(batch_size * image_size());
+    std::vector<int> labels(batch_size);
 
     TimeIt batch_time;
     int img_offset = 0;
@@ -106,7 +108,8 @@ std::vector<uint8_t> DataLoader::get_future_batch(){
         }
 
         if (is_ready(img_idx)){
-           memcpy(mem.data(), result.data() + i * image_size(), mem.size());
+           memcpy(result.data() + i * image_size(), mem.data(), mem.size());
+           labels[i] = image_ready[img_idx];
            i += 1;
         } else {
            ELOG(">> Skipping img %d waited too long (batch_size: %d)", img_idx, i);
@@ -121,7 +124,7 @@ std::vector<uint8_t> DataLoader::get_future_batch(){
     RuntimeStats::stat().insert_batch(batch_time.stop(), batch_size);
 
     DLOG("< Batch Ready (retrieve_batch_id: %d) (%d)", retrieve_batch);
-    return result;
+    return std::make_tuple(result, labels);
 }
 
 void DataLoader::shuffle(){
