@@ -66,7 +66,7 @@ void DataLoader::send_next_batch(){
         if (val.has_value()){
             i += 1;
         } else {
-            printf("Error image skipped (full: %d, size: %lu)\n", pool.is_full(), pool.size());
+            printf("Error image skipped (full: %d, size: %d)\n", pool.is_full(), pool.size());
         }
     }
 
@@ -89,7 +89,8 @@ std::vector<uint8_t> DataLoader::get_future_batch(){
 
     for(int i = 0; i < batch_size;){
         int img_idx = batch_size * retrieve_batch + img_offset;
-        DLOG(">> Waiting for (id: %d) = %d * %d + %d  (max: %d)", img_idx, batch_size, retrieve_batch, img_offset, max_id);
+        DLOG(">> Waiting for (id: %d) = %d * %d + %d  (max: %d)",
+             img_idx, batch_size, retrieve_batch, img_offset, max_id);
 
         MappedStorage<uint8_t> mem = image_mem(img_idx);
 

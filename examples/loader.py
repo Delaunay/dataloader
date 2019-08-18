@@ -31,7 +31,7 @@ loader = cpploader.Loader(
 print('Setup')
 for i in range(0, 10):
     b = loader.next()
-    # print(i, b.shape, b.sum())
+    print(i, b.shape, b.sum())
 
 all = 0
 

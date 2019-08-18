@@ -39,16 +39,16 @@ void RuntimeStats::report(double loop, double thread_count, int max_io_thread){
     printf("---------------------------------------------------\n");
 
 
-    printf("Dataloader %lu batchs \n", batch_count.load());
-    double process_time = (total_time_reduce.load()  + total_time_batch.load() + total_time_schedule.load());
-    double batch_img  = double(batch_size) / (total_time_batch.load() / double(batch_count));
-    double reduce_img = double(batch_size) / (total_time_reduce.load() / double(batch_count));
-    double total_img  = double(batch_size) / (process_time / double(batch_count));
+//    printf("Dataloader %lu batchs \n", batch_count.load());
+//    double process_time = (total_time_reduce.load()  + total_time_batch.load() + total_time_schedule.load());
+//    double batch_img  = double(batch_size) / (total_time_batch.load() / double(batch_count));
+//    double reduce_img = double(batch_size) / (total_time_reduce.load() / double(batch_count));
+//    double total_img  = double(batch_size) / (process_time / double(batch_count));
 
-    printf(" -  Sched %8.4f sec\n", total_time_schedule.load());
-    printf(" -  Batch %8.4f sec | %10.4f img/sec\n", total_time_batch.load() , batch_img);
-    printf(" - Reduce %8.4f sec | %10.4f img/sec\n", total_time_reduce.load() , reduce_img);
-    printf(" -  Total %8.4f sec | %10.4f img/sec\n", process_time, total_img);
-    printf("---------------------------------------------------\n");
+//    printf(" -  Sched %8.4f sec\n", total_time_schedule.load());
+//    printf(" -  Batch %8.4f sec | %10.4f img/sec\n", total_time_batch.load() , batch_img);
+//    printf(" - Reduce %8.4f sec | %10.4f img/sec\n", total_time_reduce.load() , reduce_img);
+//    printf(" -  Total %8.4f sec | %10.4f img/sec\n", process_time, total_img);
+//    printf("---------------------------------------------------\n");
 
 }

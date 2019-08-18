@@ -9,10 +9,17 @@
 #include <condition_variable>
 #include <cstdio>
 
-template<typename ... Args>
-void print_log(const char * fmt, const Args& ... args) {
-    printf(fmt, args...);
+
+template<typename T, typename ... Args>
+void print_log(const char * fmt, const T& a, const Args& ... args) {
+    printf(fmt, a, args...);
     printf("\n");
+    fflush(stdout);
+}
+
+inline
+void print_log(const char * fmt) {
+    printf("%s\n", fmt);
     fflush(stdout);
 }
 

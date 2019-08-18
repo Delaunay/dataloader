@@ -53,8 +53,9 @@ public:
      * @param buffering     How many bathes to work at once
      * @param seed          Seed for the PRNG
      */
-    DataLoader(ImageFolder const& dataset, std::size_t batch_size_, std::size_t worker_cout = 6, std::size_t buffering_=1, int seed=0, std::size_t io = 0):
-        dataset(dataset), buffering(buffering_), batch_size(batch_size_), seed(seed), pool(worker_cout, batch_size_ * buffering_), io_threads(io), workers(worker_cout)
+    DataLoader(ImageFolder const& dataset, int batch_size_, int worker_cout = 8, int buffering_=1, int seed=0, int io = 0):
+        dataset(dataset), buffering(buffering_), batch_size(batch_size_),
+        workers(worker_cout), io_threads(io), seed(seed), pool(worker_cout, batch_size_ * buffering_)
     {
         DLOG("%s", "init dataloader");
 
@@ -130,10 +131,10 @@ public:
     }
 
     ImageFolder const& dataset;
-    std::size_t const buffering;
-    std::size_t const batch_size;
-    std::size_t const workers;
-    std::size_t const io_threads;
+    int const buffering;
+    int const batch_size;
+    int const workers;
+    int const io_threads;
     int const seed;
 
     void report() const {

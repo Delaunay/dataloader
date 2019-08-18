@@ -28,7 +28,7 @@ Image single_threaded_loader(std::tuple<std::string, int, std::size_t> const& it
     RuntimeStats::stat().insert_read(read_time.stop(), size);
 
     Transform trans;
-    trans.hflip();
+    // trans.hflip();
 
     // Transform
     TimeIt transform_time;
@@ -45,8 +45,8 @@ Image single_threaded_loader(std::tuple<std::string, int, std::size_t> const& it
     // Scale
     TimeIt scale_time;
     img.inplace_scale(224, 224);
-    RuntimeStats::stat().insert_scaling(scale_time.stop(), img.size());
 
+    RuntimeStats::stat().insert_scaling(scale_time.stop(), img.size());
     RuntimeStats::stat().increment_count();
 
     return img;

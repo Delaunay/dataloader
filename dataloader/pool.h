@@ -39,7 +39,7 @@ public:
     using FunctionCall = std::function<Output(Input a)>;
 
 public:
-    ThreadPool(std::size_t worker_num, std::size_t max_request):
+    ThreadPool(int worker_num, int max_request):
         _queue(max_request, []() { return nullptr; })
     {
         DLOG("Initialize Thread pool");
@@ -118,8 +118,8 @@ public:
 
     void report() const;
 
-    std::size_t size() const {
-        return _queue.size();
+    int size() const {
+        return int(_queue.size());
     }
 
 private:
@@ -235,7 +235,7 @@ void ThreadPool<Input, Output>::report() const {
 
     printf("Thread Pool Report\n");
     printf("   ID       WORK       IDLE   (%%)  TASKS  WORK/TASK\n");
-    for(int i = 0; i < _workers.size(); ++i){
+    for(int i = 0, n = int(_workers.size()); i < n; ++i){
         double a = _workers[i].total_work_time;
         double b = _workers[i].total_idle_time;
         std::size_t c = _workers[i].task_count;
