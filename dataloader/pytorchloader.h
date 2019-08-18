@@ -14,7 +14,7 @@ public:
     {}
 
     // return a NCHW ui8 tensor
-    at::Tensor get_next_item(){
+    std::tuple<at::Tensor, at::Tensor> get_next_item(){
         return loader.get_next_item();
     }
 

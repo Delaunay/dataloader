@@ -10,11 +10,7 @@
 #undef DLOG
 #define DLOG(...)
 
-Image single_threaded_loader(std::tuple<std::string, int, std::size_t> const& item){
-    std::string path; int label; std::size_t size;
-    std::tie(path, label, size) = item;
-    DLOG("Starting task %s %i %lu", path.c_str(), label, size);
-
+JpegImage load_jpeg(const std::string& path, std::size_t size){
     // Read
     DLOG("%s", "Waiting for IO resource");
     TimeIt io_block_time;
@@ -24,8 +20,18 @@ Image single_threaded_loader(std::tuple<std::string, int, std::size_t> const& it
     DLOG("%s", "Reading bytes", path);
     TimeIt read_time;
     auto jpeg = JpegImage(path.c_str(), size);
+
     end_io();
     RuntimeStats::stat().insert_read(read_time.stop(), size);
+    return jpeg;
+}
+
+Image single_threaded_loader(std::tuple<std::string, int, std::size_t> const& item){
+    std::string path; int label; std::size_t size;
+    std::tie(path, label, size) = item;
+    DLOG("Starting task %s %i %lu", path.c_str(), label, size);
+
+    JpegImage jpeg = load_jpeg(path, size);
 
     Transform trans;
     // trans.hflip();

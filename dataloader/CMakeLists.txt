@@ -43,17 +43,18 @@ set(FILESYSTEM_LIB
     ${Boost_SYSTEM_LIBRARY}
     stdc++fs
     pthread
+    zip
 )
 
 macro(library name)
     ADD_LIBRARY(${name} ${DATALOADER_HDS} ${DATALOADER_SRC})
-    TARGET_LINK_LIBRARIES(${name} ${FILESYSTEM_LIB} ${TurboJPEG_LIBRARIES})
+    TARGET_LINK_LIBRARIES(${name} ${FILESYSTEM_LIB} ${TurboJPEG_LIBRARIES} zip)
     SET_PROPERTY(TARGET ${name} PROPERTY CXX_STANDARD 17)
 endmacro(library)
 
 macro(executable name)
     ADD_EXECUTABLE(${name} ${name}.cpp)
-    TARGET_LINK_LIBRARIES(${name} ${FILESYSTEM_LIB} ${TurboJPEG_LIBRARIES} dataloader)
+    TARGET_LINK_LIBRARIES(${name} ${FILESYSTEM_LIB} ${TurboJPEG_LIBRARIES} dataloader zip)
     SET_PROPERTY(TARGET ${name} PROPERTY CXX_STANDARD 17)
 endmacro(executable)
 
@@ -66,6 +67,7 @@ executable(test_buffer)
 executable(test_pool)
 executable(test_directory_iterator)
 executable(test_dataset)
+executable(test_zip)
 
 add_test(NAME buffer COMMAND test_buffer)
 add_test(NAME pool COMMAND test_pool)

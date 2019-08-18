@@ -13,6 +13,7 @@
 #include <functional>
 #include <cassert>
 
+#include <zip.h>
 #include "utils.h"
 
 #undef DLOG
@@ -62,5 +63,18 @@ private:
     // folder_name/classe_name/sample
     void find_all_images(Path const& folder_name, int class_index=-1);
 };
+
+
+//class ZippedImageFolder{
+//public:
+//    ZippedImageFolder(const char* file_name)
+//    {
+//        zip_fopen(file, file_name, ZIP_FL_UNCHANGED);
+//        int entries = zip_get_num_entries(file, ZIP_FL_UNCHANGED);
+//    }
+
+//private:
+//    zip_file_t* file;
+//};
 
 #endif
