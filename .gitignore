@@ -32,7 +32,7 @@ Makefile*
 /old/
 */.idea/*
 *.autosave
-dependencies/torch-cpu/
+dependencies/libtorch/
 dependencies/torch-gpu/
 dependencies/SDL/
 dependencies/SDL_ttf/

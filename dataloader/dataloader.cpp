@@ -84,8 +84,9 @@ void DataLoader::send_next_batch(){
 }
 
 std::vector<Image> DataLoader::get_next_item(){
+    auto r = reduce_to_vector(get_future_batch());
     send_next_batch();
-    return reduce_to_vector(get_future_batch());
+    return r;
 }
 
 std::vector<Image> DataLoader::get_future_batch(){

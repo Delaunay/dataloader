@@ -1,5 +1,8 @@
 #include "dataloader2.h"
+
 #include <cstring>
+#include <thread>
+
 
 std::vector<uint8_t> DataLoader2::get_next_item(){
     auto ret = get_future_batch();
@@ -76,23 +79,27 @@ std::vector<uint8_t> DataLoader2::get_future_batch(){
     int img_offset = 0;
 
     for(int i = 0; i < batch_size;){
-       int img_idx = batch_size * retrieve_batch + img_offset;
-       DLOG(">> Waiting for (id: %d) = %d * %d + %d  (max: %d)", img_idx, batch_size, retrieve_batch, img_offset, batch_size * buffering);
+        int img_idx = batch_size * retrieve_batch + img_offset;
+        DLOG(">> Waiting for (id: %d) = %d * %d + %d  (max: %d)", img_idx, batch_size, retrieve_batch, img_offset, batch_size * buffering);
 
-       MappedStorage<uint8_t> mem = image_mem(img_idx);
+        MappedStorage<uint8_t> mem = image_mem(img_idx);
 
-       // wait for the image to be ready
-       while(!is_ready(img_idx)){}
+        // wait for the image to be ready
+        int wait_time = 0;
+        while(!is_ready(img_idx) && wait_time < 100000){
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            wait_time += 1;
+        }
 
-       if (is_ready(img_idx)){
+        if (is_ready(img_idx)){
            memcpy(mem.data(), result.data(), mem.size());
            i += 1;
-       } else {
+        } else {
            ELOG(">> Skipping img %d waited too long", img_idx);
-       }
+        }
 
-       img_offset += 1;
-       mark_empty(img_idx);
+        img_offset += 1;
+        mark_empty(img_idx);
     }
 
     retrieve_batch = (retrieve_batch + 1) % buffering;

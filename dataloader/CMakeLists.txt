@@ -73,25 +73,29 @@ add_test(NAME buffer COMMAND test_buffer)
 add_test(NAME pool COMMAND test_pool)
 
 # ../dependencies/torch-cpu/libtorch/share/cmake/
-SET(Torch_DIR  ../dependencies/torch-cpu/libtorch/share/cmake/Torch)
+SET(Torch_DIR  ../dependencies/libtorch/share/cmake/Torch)
 
+find_package(Python COMPONENTS Development)
 find_package(Torch)
 
 include_directories(${TORCH_INCLUDE_DIRS})
 include_directories(${Python_INCLUDE_DIRS})
 
 IF (BUILD_PYTHON_MODULE)
-    LINK_DIRECTORIES(../dependencies/torch-cpu/lib)
+    LINK_DIRECTORIES(../dependencies/libtorch/lib)
 
-    ADD_LIBRARY(cpploader MODULE pyloader.cpp pytorchloader.h torchloader.cpp ${DATALOADER_SRC})
+    ADD_LIBRARY(cpploader MODULE pyloader.cpp pytorchloader.h torchloader.h torchloader.cpp ${DATALOADER_SRC})
+    MESSAGE(STATUS ${TORCH_LIBRARIES})
     TARGET_LINK_LIBRARIES(cpploader PUBLIC
         ${FILESYSTEM_LIB}
         ${TurboJPEG_LIBRARIES}
         ${TORCH_LIBRARIES}
+
         # dataloader
         pybind11::module
         # numpy stuff
         torch_python
+        c10
     )
     SET_PROPERTY(TARGET cpploader PROPERTY CXX_STANDARD 17)
     SET_PROPERTY(TARGET cpploader PROPERTY PREFIX "${PYTHON_MODULE_PREFIX}")
@@ -99,7 +103,7 @@ IF (BUILD_PYTHON_MODULE)
 
     add_custom_command(TARGET cpploader POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${PROJECT_SOURCE_DIR}/dependencies/torch-cpu/lib"
+            "${PROJECT_SOURCE_DIR}/dependencies/libtorch/lib"
             $<TARGET_FILE_DIR:cpploader>)
 ENDIF(BUILD_PYTHON_MODULE)
 

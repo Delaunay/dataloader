@@ -4,6 +4,7 @@
 #include <torch/extension.h>
 
 #include "dataloader.h"
+#include "dataloader2.h"
 #include "utils.h"
 
 #undef DLOG
@@ -18,12 +19,13 @@ public:
 
     // return a NCHW ui8 tensor
     at::Tensor get_next_item(){
-        return reduce_to_tensor(loader.get_future_batch());
+        auto batch = loader.get_next_item();
+        return reduce_to_tensor(batch);
     }
 
     std::size_t const img_size = 3 * 224 * 224;
 
-    torch::Tensor reduce_to_tensor(std::vector<Image> const& future_batch);
+    torch::Tensor reduce_to_tensor(std::vector<uint8_t> const& future_batch);
 
     void report() const {
         loader.report();
@@ -34,7 +36,7 @@ public:
     }
 
 private:
-    DataLoader loader;
+    DataLoader2 loader;
 };
 
 #endif

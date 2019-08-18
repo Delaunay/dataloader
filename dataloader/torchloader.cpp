@@ -1,7 +1,7 @@
 #include "torchloader.h"
 
 
-torch::Tensor TorchLoader::reduce_to_tensor(std::vector<Image> const& future_batch){
+torch::Tensor TorchLoader::reduce_to_tensor(const std::vector<uint8_t> &future_batch){
     auto options =
       torch::TensorOptions()
         .dtype(torch::kUInt8)
@@ -13,10 +13,13 @@ torch::Tensor TorchLoader::reduce_to_tensor(std::vector<Image> const& future_bat
 
     DLOG("Copying result to tensor");
     TimeIt reduce_time;
-    for(std::size_t i = 0; i < loader.batch_size; ++i){
-        Image const& img = future_batch[i];
-        memcpy(batch.data<unsigned char>() + i * img_size, img.data(), img_size);
-    }
+    //for(std::size_t i = 0; i < loader.batch_size; ++i){
+    //    Image const& img = future_batch[i];
+    //    memcpy(batch.data<unsigned char>() + i * img_size, img.data(), img_size);
+    //}
+
+    memcpy(batch.data<uint8_t>(), future_batch.data(), img_size * loader.batch_size);
+
     RuntimeStats::stat().insert_reduce(reduce_time.stop(), loader.batch_size);
 
     DLOG("Tensor Ready");

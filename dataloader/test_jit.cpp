@@ -64,7 +64,7 @@ int main(int argc, const char* argv[]){
     make_io_lock(max_io_thread);
 
     DLOG("Reading Pytorch model to jit");
-    std::shared_ptr<torch::jit::script::Module> module = torch::jit::load(model_file);
+    torch::jit::script::Module module = torch::jit::load(model_file);
 
     //try{
         DLOG("Init data set");
@@ -77,7 +77,7 @@ int main(int argc, const char* argv[]){
             std::vector<torch::jit::IValue> inputs;
             inputs.push_back(dataloader.get_next_item());
 
-            at::Tensor out = module->forward(inputs).toTensor();
+            at::Tensor out = module.forward(inputs).toTensor();
 
             std::cout << out.slice(/*dim=*/1, /*start=*/0, /*end=*/5) << '\n';
         }

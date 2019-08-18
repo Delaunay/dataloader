@@ -76,6 +76,7 @@ public:
         image_ready = std::vector<bool>(batch_size_ * buffering_);
 
         for(int i = 0; i < buffering_; ++i){
+            DLOG("%s", "send batch request");
             send_next_batch();
         }
     }

@@ -28,15 +28,17 @@ loader = cpploader.Loader(
     args.mx_io
 )
 
+print('Setup')
 for i in range(0, 10):
     b = loader.next()
+    # print(i, b.shape, b.sum())
 
 all = 0
 
 print('Iterate')
 s = time.time()
 for i in range(0, args.count):
-    print(i)
+    print('Starting', i)
     b = loader.next()
     print(b[0, 0, 0, 0])
 
