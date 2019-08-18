@@ -1,5 +1,5 @@
-#ifndef DATALOADER_DATALOADER_HEADER_H
-#define DATALOADER_DATALOADER_HEADER_H
+#ifndef DATALOADER_DATALOADER2_HEADER_H
+#define DATALOADER_DATALOADER2_HEADER_H
 
 #include "dataset.h"
 #include "pool.h"
@@ -11,8 +11,36 @@
 
 #include "utils.h"
 
-//#undef DLOG
-//#define DLOG(...)
+#undef DLOG
+#define DLOG(...)
+
+template<typename T>
+class MappedStorage{
+public:
+    MappedStorage(T* ptr, int size):
+        _data(ptr), _size(size)
+    {
+        //DLOG("Mapped Storage %i", size);
+    }
+
+    T  operator[] (int idx) const { return _data[idx]; }
+    T& operator[] (int idx)       { return _data[idx]; }
+
+    MappedStorage<T> sub(int start, int size){
+        return MappedStorage<T>(_data + start, size);
+    }
+
+    void* data(){
+        return _data;
+    }
+
+    int size() const {  return _size;}
+
+private:
+    T* _data;
+    int _size;
+};
+
 
 class DataLoader{
 public:
@@ -25,7 +53,67 @@ public:
      * @param buffering     How many bathes to work at once
      * @param seed          Seed for the PRNG
      */
-    DataLoader(ImageFolder const& dataset, std::size_t batch_size_, std::size_t worker_cout = 6, std::size_t buffering_=1, int seed=0, std::size_t io = 0);
+    DataLoader(ImageFolder const& dataset, std::size_t batch_size_, std::size_t worker_cout = 6, std::size_t buffering_=1, int seed=0, std::size_t io = 0):
+        dataset(dataset), buffering(buffering_), batch_size(batch_size_), seed(seed), pool(worker_cout, batch_size_ * buffering_), io_threads(io), workers(worker_cout)
+    {
+        DLOG("%s", "init dataloader");
+
+        if (io == 0){
+            io = worker_cout;
+        }
+
+        make_io_lock(io);
+
+        image_indices = std::vector<std::size_t>(dataset.size());
+
+        for(std::size_t i = 0; i < std::size_t(dataset.size()); ++i){
+            image_indices[i] = i;
+        }
+
+        shuffle();
+
+        memory_pool = std::vector<uint8_t>(batch_size_ * image_size() * buffering_);
+        image_ready = std::vector<uint8_t>(batch_size_ * buffering_, 0);
+
+        for(int i = 0; i < buffering_; ++i){
+            DLOG("%s", "send batch request");
+            send_next_batch();
+        }
+    }
+
+    std::size_t image_size(){
+        return 3 * 224 * 224;
+    }
+
+    // return the underlying memory used for image idx
+    MappedStorage<uint8_t> image_mem(int idx){
+        //DLOG("image_mem (idx: %d) (max: %d)", idx, batch_size * buffering);
+        assert(idx >= 0 && idx < batch_size * buffering);
+
+        int size = image_size();
+        return MappedStorage<uint8_t>(memory_pool.data() + idx * size, size);
+    }
+
+    void mark_ready(int idx){
+        //DLOG("mark ready %d", idx);
+        image_ready[idx] = true;
+    }
+
+    void mark_empty(int idx){
+        //DLOG("mark empty %d", idx);
+        image_ready[idx] = false;
+    }
+
+    bool is_ready(int idx) const {
+        DLOG("check ready %d => %d", idx, image_ready[idx]);
+        return image_ready[idx];
+    }
+
+    MappedStorage<uint8_t> batch_mem(int idx){
+        assert(idx >= 0 && idx < buffering);
+        int size = image_size() * batch_size;
+        return MappedStorage<uint8_t>(memory_pool.data() + idx * size, size);
+    }
 
     std::size_t get_next_image_index();
 
@@ -35,7 +123,7 @@ public:
 
     void send_next_batch();
 
-    std::vector<Image> get_next_item();
+    std::vector<uint8_t> get_next_item();
 
     ~DataLoader(){
         pool.shutdown();
@@ -44,9 +132,13 @@ public:
     ImageFolder const& dataset;
     std::size_t const buffering;
     std::size_t const batch_size;
+    std::size_t const workers;
+    std::size_t const io_threads;
     int const seed;
 
     void report() const {
+        double loop = loop_time.stop();
+        RuntimeStats::stat().report(loop, workers, io_threads);
         pool.report();
     }
 
@@ -54,31 +146,37 @@ public:
         pool.shutdown();
     }
 
-    std::vector<Image> get_future_batch();
-
-    std::vector<Image> reduce_to_vector(std::vector<Image> const& future_batch);
+    std::vector<uint8_t> get_future_batch();
 
     void shuffle();
 
 private:
     using Buffer = std::vector<char>;
-    ThreadPool<int, Image> pool;
+    ThreadPool<std::tuple<int, int>, bool> pool;
     std::mutex _lock;
 
+    // shuffuled
     std::vector<std::size_t> image_indices{dataset.size()};
 
-    using FutureBatch = std::vector<std::shared_future<Image>>;
-    using FutureBatchPtr = std::unique_ptr<FutureBatch>;
+    // little allocation is done most of the memory is allocated once and reused
+    std::vector<uint8_t> memory_pool;
 
-    std::vector<FutureBatchPtr> future_buffered_batch;
-    std::size_t buffering_index = 0;
-    std::size_t next_batch = 0;
+    // Is the image ready, used as image lock
+    // the loader set the flag to true once the image is ready
+    // the loader pool the flag until it is ready
+    // there is no concurrent write in the image index so we do not need to lock it
+    // cant be a vector<bool> because then the update is not atomic
+    std::vector<uint8_t>  image_ready;
+
+    std::size_t sent_batch = 0;
+    std::size_t retrieve_batch = 0;
 
     std::mt19937 prng_engine{seed};
     std::size_t image_iterator = 0;
 
     bool reshuffle_after_epoch = false;
     std::size_t _epoch = 0;
+    TimeIt loop_time;
 };
 
 #endif

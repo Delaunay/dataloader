@@ -1,18 +1,18 @@
 #include "dataset.h"
 #include "dataloader.h"
-#include "dataloader2.h"
 #include "jpeg.h"
 #include "utils.h"
 #include "runtime.h"
 #include "pool.h"
 #include "io.h"
-
 #include "loader.h"
 
 #include <ctime>
-#include <sstream>
 #include <cstdio>
 #include <cstring>
+
+#include <iostream>
+#include <sstream>
 
 int main(int argc, const char* argv[]){
 
@@ -59,28 +59,17 @@ int main(int argc, const char* argv[]){
 
     make_io_lock(max_io_thread);
 
-    #ifdef USE_CPP
-    try{
-    #endif
-        ImageFolder dataset(data_loc, single_threaded_loader);
-        DataLoader2 dataloader(dataset, batch_size, thread_count, buffering, seed);
+    ImageFolder dataset(data_loc, single_threaded_loader);
+    DataLoader dataloader(dataset, batch_size, thread_count, buffering, seed, max_io_thread);
 
-        TimeIt loop_time;
-        for(int i = 0; i < image_to_load; ++i){
-            dataloader.get_next_item();
-        }
-
-        double loop = loop_time.stop();
-        RuntimeStats::stat().report(loop, thread_count, max_io_thread);
-
-        dataloader.report();
-
-    #ifdef USE_CPP
-    } catch (const FS_NAMESPACE::filesystem_error& e){
-        printf("%s\n", e.what());
-        return -1;
+    TimeIt loop_time;
+    for(int i = 0; i < image_to_load; ++i){
+        dataloader.get_next_item();
+        std::cout << i << std::endl;
     }
-    #endif
+
+    double loop = loop_time.stop();
+    dataloader.report();
 
     return 0;
 }

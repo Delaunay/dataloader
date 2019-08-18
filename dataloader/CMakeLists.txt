@@ -8,7 +8,6 @@ INCLUDE_DIRECTORIES(.)
 SET(DATALOADER_HDS
     io.h
     utils.h
-    dataloader.h
     dataset.h
     ffilesystem.h
     jpeg.h
@@ -17,12 +16,11 @@ SET(DATALOADER_HDS
     buffer.h
     pool.h
     loader.h
-    dataloader2.h
+    dataloader.h
 )
 
 SET(DATALOADER_SRC
     utils.cpp
-    dataloader.cpp
     dataset.cpp
     io.cpp
     ffilesystem.cpp
@@ -32,7 +30,7 @@ SET(DATALOADER_SRC
     pool.cpp
     loader.cpp
     runtime.cpp
-    dataloader2.cpp
+    dataloader.cpp
 )
 
 find_package(TurboJPEG)

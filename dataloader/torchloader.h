@@ -4,7 +4,6 @@
 #include <torch/extension.h>
 
 #include "dataloader.h"
-#include "dataloader2.h"
 #include "utils.h"
 
 #undef DLOG
@@ -36,7 +35,7 @@ public:
     }
 
 private:
-    DataLoader2 loader;
+    DataLoader loader;
 };
 
 #endif

@@ -1,41 +1,23 @@
 #include "dataloader.h"
 
-DataLoader::DataLoader(ImageFolder const& dataset, std::size_t batch_size_, std::size_t worker_cout, std::size_t buffering_, int seed, std::size_t io):
-    dataset(dataset), buffering(buffering_), batch_size(batch_size_), seed(seed), pool(worker_cout, batch_size_ * buffering_)
-{
-    DLOG("%s", "init dataloader");
+#include <cstring>
 
-    if (io == 0){
-        io = worker_cout;
-    }
+#include <iostream>
+#include <thread>
 
-    make_io_lock(io);
 
-    image_indices = std::vector<std::size_t>(dataset.size());
+std::vector<uint8_t> DataLoader::get_next_item(){
+    DLOG("getting batch");
+    auto ret = get_future_batch();
 
-    for(std::size_t i = 0; i < std::size_t(dataset.size()); ++i){
-        image_indices[i] = i;
-    }
-
-    shuffle();
-
-    // std::vector<FutureBatchPtr>
-    future_buffered_batch = std::vector<FutureBatchPtr>(buffering);
-
-    //for(std::size_t i = 0; i < buffering; ++i){
-    //   future_buffered_batch[i] = std::vector<std::shared_future<Image>>(batch_size);
-    //}
-
-    DLOG("%s", "Starting the load image request");
-    for(std::size_t i = 0; i < buffering; ++i){
-       send_next_batch();
-    }
+    DLOG("sending work");
+    send_next_batch();
+    return ret;
 }
 
-std::size_t DataLoader::get_next_image_index(){
-    DLOG("get_next_image_index");
 
-    //std::lock_guard lock(_lock);
+std::size_t DataLoader::get_next_image_index(){
+    //DLOG("get_next_image_index");
 
     std::size_t i = image_iterator;
     image_iterator += 1;
@@ -53,86 +35,92 @@ std::size_t DataLoader::get_next_image_index(){
 }
 
 void DataLoader::send_next_batch(){
-    //std::lock_guard lock(_lock);
-
-    DLOG("send_next_batch %d", buffering_index % buffering);
-
-    if (future_buffered_batch[buffering_index] == nullptr){
-        future_buffered_batch[buffering_index] = std::make_unique<FutureBatch>(batch_size);
-    }
-
-    FutureBatch& future_batch = *future_buffered_batch[buffering_index].get();
-    buffering_index = (buffering_index + 1) % buffering;
+    DLOG("> Send next batch (retrieve_batch_id: %d) (sending_batch_id: %d)", retrieve_batch, sent_batch);
 
     TimeIt schedule_time;
 
-    for(std::size_t i = 0; i < batch_size;){
+    for(int i = 0; i < batch_size;){
         int index = int(get_next_image_index());
+        int img_index = sent_batch * batch_size + i;
 
-        auto val = pool.insert_task(index, [&](int index){
-            return dataset.get_item(index);
+        DLOG(">> Before Schedule %d = %d * %d", img_index, i, sent_batch);
+
+        auto val = pool.insert_task(std::make_tuple(index, img_index), [&](std::tuple<int, int> input) -> bool {
+            int index, img_index;
+            std::tie(index, img_index) = input;
+
+            MappedStorage<uint8_t> mem = image_mem(img_index);
+
+            // read image
+            Image im = dataset.get_item(index);
+
+            // Copy to storage
+            memcpy(mem.data(), im.data(), mem.size());
+
+            // Image is ready to be consumed
+            mark_ready(img_index);
+            DLOG(">> Image (id: %d) is ready", img_index);
+            return true;
         });
 
         if (val.has_value()){
-            future_batch[i] = val.value();
             i += 1;
         } else {
             printf("Error image skipped (full: %d, size: %lu)\n", pool.is_full(), pool.size());
         }
     }
+
     RuntimeStats::stat().insert_schedule(schedule_time.stop(), batch_size);
+    sent_batch = (sent_batch + 1) % buffering;
+
+    DLOG("< Done sending work (sending_batch_id: %d)", sent_batch);
 }
 
-std::vector<Image> DataLoader::get_next_item(){
-    auto r = reduce_to_vector(get_future_batch());
-    send_next_batch();
-    return r;
-}
+std::vector<uint8_t> DataLoader::get_future_batch(){
+    // copy out of the dataloader so the memory can be reused
+    // The user becomes now the owner of the data
+    DLOG("> Waiting for images (retrieve_batch_id: %d) (sending_batch_id: %d)", retrieve_batch, sent_batch);
 
-std::vector<Image> DataLoader::get_future_batch(){
-    //std::lock_guard lock(_lock);
-
-    DLOG("%s %d", "Waiting for images", next_batch % buffering);
-    FutureBatch& future_batch = *future_buffered_batch[next_batch].get();
-    std::vector<Image> result;
-    result.reserve(future_batch.size());
+    std::vector<uint8_t> result(batch_size * image_size());
 
     TimeIt batch_time;
-    for(std::size_t i = 0; i < batch_size; ++i){
-        DLOG("waiting for image (id: %lu)", i);
-        std::shared_future<Image>& fut = future_batch[i];
-        try{
-            fut.wait();
-            DLOG("Pushing Result");
-            result.push_back(fut.get());
-        } catch (std::exception const& e){
-            DLOG(e.what());
-            //std::abort();
+    int img_offset = 0;
+    int max_id = batch_size * buffering;
+
+    for(int i = 0; i < batch_size;){
+        int img_idx = batch_size * retrieve_batch + img_offset;
+        DLOG(">> Waiting for (id: %d) = %d * %d + %d  (max: %d)", img_idx, batch_size, retrieve_batch, img_offset, max_id);
+
+        MappedStorage<uint8_t> mem = image_mem(img_idx);
+
+        // wait for the image to be ready
+        int wait_time = 0;
+        while(!is_ready(img_idx)){
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            wait_time += 1;
+
+            if (wait_time > 10000){
+                break;
+            }
         }
+
+        if (is_ready(img_idx)){
+           memcpy(mem.data(), result.data() + i * image_size(), mem.size());
+           i += 1;
+        } else {
+           ELOG(">> Skipping img %d waited too long (batch_size: %d)", img_idx, i);
+        }
+
+        img_offset = (img_offset + 1) % batch_size;
+        DLOG("> Mark empty (id: %d)", img_idx);
+        mark_empty(img_idx);
     }
 
-    DLOG("test");
-    future_buffered_batch[next_batch] = nullptr;
-    next_batch += (next_batch + 1) % buffering;
-    DLOG("test");
+    retrieve_batch = (retrieve_batch + 1) % buffering;
     RuntimeStats::stat().insert_batch(batch_time.stop(), batch_size);
-    DLOG("%s", "Images ready");
+
+    DLOG("< Batch Ready (retrieve_batch_id: %d) (%d)", retrieve_batch);
     return result;
-}
-
-std::vector<Image> DataLoader::reduce_to_vector(std::vector<Image> const& future_batch){/*
-    std::vector<Image> batch;
-    batch.reserve(batch_size);
-
-    TimeIt reduce_time;
-    for(std::size_t i = 0; i < batch_size; ++i){
-        std::shared_future<Image>& fut = future_batch[i];
-        batch.push_back(std::move(fut.get()));
-    }
-    RuntimeStats::stat().insert_reduce(reduce_time.stop(), batch_size);
-
-    return batch;*/
-    return future_batch;
 }
 
 void DataLoader::shuffle(){

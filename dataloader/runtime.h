@@ -51,12 +51,12 @@ public:
     void insert_batch(double time, std::size_t batch_size_){
         total_time_batch.store(total_time_batch.load() + time);
         batch_size = batch_size_;
+        batch_count += 1;
     }
 
     std::atomic<double> total_time_reduce{0};
 
     void insert_reduce(double time, std::size_t){
-        batch_count += 1;
         total_time_reduce.store(total_time_reduce.load() + time);
     }
 
