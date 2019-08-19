@@ -3,35 +3,16 @@
 #include "jpeg.h"
 #include "runtime.h"
 #include "pool.h"
-#include "io.h"
 
 #include "utils.h"
 
 #undef DLOG
 #define DLOG(...)
 
-JpegImage load_jpeg(const std::string& path, std::size_t size){
-    // Read
-    DLOG("%s", "Waiting for IO resource");
-    TimeIt io_block_time;
-    start_io();
-    RuntimeStats::stat().insert_io_block(io_block_time.stop());
+Image single_threaded_loader(const Bytes &data){
+    DLOG("Starting task");
 
-    DLOG("%s", "Reading bytes", path);
-    TimeIt read_time;
-    auto jpeg = JpegImage(path.c_str(), size);
-
-    end_io();
-    RuntimeStats::stat().insert_read(read_time.stop(), size);
-    return jpeg;
-}
-
-Image single_threaded_loader(std::tuple<std::string, int, std::size_t> const& item){
-    std::string path; int label; std::size_t size;
-    std::tie(path, label, size) = item;
-    DLOG("Starting task %s %i %lu", path.c_str(), label, size);
-
-    JpegImage jpeg = load_jpeg(path, size);
+    JpegImage jpeg(data);
 
     Transform trans;
     // trans.hflip();

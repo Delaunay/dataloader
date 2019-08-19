@@ -52,11 +52,14 @@ void DataLoader::send_next_batch(){
             MappedStorage<uint8_t> mem = image_mem(img_index);
 
             // read image
-            std::tuple<Image, int> sample = dataset.get_item(index);
+            std::tuple<Bytes, int> sample = dataset.get_item(index);
+
+            // Transform Image
+            Image img = trans(std::get<0>(sample));
 
             // Copy to storage
-            assert(mem.size() == std::get<0>(sample).size());
-            memcpy(mem.data(), std::get<0>(sample).data(), mem.size());
+            assert(mem.size() == img.size());
+            memcpy(mem.data(), img.data(), mem.size());
 
             // Image is ready to be consumed
             mark_ready(img_index, std::get<1>(sample));

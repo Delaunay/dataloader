@@ -1,7 +1,17 @@
 #include <cstdio>
 #include <zip.h>
 
+#include "dataset.h"
+
 int main(){
+    const char* file_name = "/media/setepenre/UserData/tmp/train.zip";
+
+    ZippedImageFolder data(file_name);
+
+    return 0;
+}
+
+int main2(){
     const char* file_name = "/media/setepenre/UserData/tmp/fake.zip";
 
     int error;
@@ -13,13 +23,12 @@ int main(){
 
         zip_stat_index(handle, i,  ZIP_FL_UNCHANGED, &stat);
 
-        printf("    %s %d\n", stat.name, stat.size);
 
-        zip_file_t* file_h = zip_fopen_index(handle, i, ZIP_FL_UNCHANGED);
+        printf("    %s %d %lu\n", stat.name, stat.size, stat.valid);
 
-        int read_bytes = zip_fread(file_h, buffer, nbytes);
-
-        zip_fclose(file_h);
+//        zip_file_t* file_h = zip_fopen_index(handle, i, ZIP_FL_UNCHANGED);
+//        int read_bytes = zip_fread(file_h, buffer, nbytes);
+//        zip_fclose(file_h);
     }
 
     printf("entries: %d \n", entries);

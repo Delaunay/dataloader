@@ -42,9 +42,16 @@ private:
 };
 
 
+
+
 class DataLoader{
 public:
     using Path = FS_NAMESPACE::path;
+    using Transform = std::function<Image(const Bytes&)>;
+
+    DataLoader(ImageFolder const& dataset, int batch_size_, int worker_cout = 8, int buffering_=1, int seed=0, int io = 0):
+        DataLoader(dataset, batch_size_, single_threaded_loader, worker_cout, buffering_, seed, io)
+    {}
 
     /**
      * @brief DataLoader    Loads dataset samples and accumulate them into batches for training
@@ -53,7 +60,7 @@ public:
      * @param buffering     How many bathes to work at once
      * @param seed          Seed for the PRNG
      */
-    DataLoader(ImageFolder const& dataset, int batch_size_, int worker_cout = 8, int buffering_=1, int seed=0, int io = 0):
+    DataLoader(ImageFolder const& dataset, int batch_size_, Transform trans, int worker_cout = 8, int buffering_=1, int seed=0, int io = 0):
         dataset(dataset), buffering(buffering_), batch_size(batch_size_),
         workers(worker_cout), io_threads(io), seed(seed), pool(worker_cout, batch_size_ * buffering_)
     {
@@ -133,6 +140,7 @@ public:
     int const workers;
     int const io_threads;
     int const seed;
+    Transform trans;
 
     void report() const {
         double loop = loop_time.stop();

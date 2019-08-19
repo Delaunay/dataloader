@@ -5,9 +5,20 @@
 #include <ratio>
 #include <cmath>
 
+#include <unordered_map>
+#include <vector>
+
 #include <mutex>
 #include <condition_variable>
 #include <cstdio>
+
+using Bytes = std::vector<unsigned char>;
+
+template<typename K, typename V>
+using Dict = std::unordered_map<K, V>;
+
+template<typename V>
+using Array = std::vector<V>;
 
 
 template<typename T, typename ... Args>

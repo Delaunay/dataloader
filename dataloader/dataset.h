@@ -4,17 +4,17 @@
 #include "ffilesystem.h"
 #include "image.h"
 #include "loader.h"
+#include "runtime.h"
+#include "utils.h"
+#include "io.h"
 
 #include <future>
-#include <unordered_map>
 #include <tuple>
-#include <vector>
 #include <string>
 #include <functional>
 #include <cassert>
 
 #include <zip.h>
-#include "utils.h"
 
 #undef DLOG
 #define DLOG(...)
@@ -24,40 +24,60 @@
 class ImageFolder{
 public:
     using Path = FS_NAMESPACE::path;
-    using Loader = std::function<Image(std::tuple<std::string, int, std::size_t> const& item)>;
 
-    ImageFolder(std::string const& folder_name, Loader const& loader, bool verbose=true);
+    struct Sample{
+        std::string name;
+        int label;
+        std::size_t size;
+    };
 
-    ImageFolder(std::string const& folder_name, bool verbose=true):
-        ImageFolder(folder_name, single_threaded_loader, verbose)
-    {
-        DLOG("ImageFolder Delegate Ctor");
-    }
+    ImageFolder(std::string const& folder_name, bool verbose=true);
 
-    std::tuple<Image, int> get_item(int index) const{
+    std::tuple<Bytes, int> get_item(int index) const {
         assert(index >= 0  && std::size_t(index) < _images.size() && "image index out of bounds");
         auto img_ref = _images[std::size_t(index)];
-        return std::make_tuple(loader(img_ref), std::get<1>(img_ref));
+
+        Bytes data = load_file(img_ref.name, img_ref.size);
+        return std::make_tuple(data, img_ref.label);
     }
 
     std::size_t size() const {
         return _images.size();
     }
 
-    std::vector<std::tuple<std::string, int, std::size_t>> const& samples() const {
+    Array<Sample> const& samples() const {
         return _images;
     }
-    std::unordered_map<std::string, int> const& classes_to_label() const {
+    Dict<std::string, int> const& classes_to_label() const {
         return _classes_to_index;
     }
 
-    Loader loader;
+    Bytes load_file(std::string const& file_name, std::size_t file_size) const {
+        Bytes buffer(file_size);
+
+        DLOG("%s", "Waiting for IO resource");
+        TimeIt io_block_time;
+        start_io();
+        RuntimeStats::stat().insert_io_block(io_block_time.stop());
+
+        TimeIt read_time;
+        FILE* file = fopen(file_name.c_str(), "r");
+        std::size_t read_size = fread(&buffer[0], sizeof(unsigned char), file_size, file);
+        RuntimeStats::stat().insert_read(read_time.stop(), file_size);
+
+        end_io();
+
+        assert(read_size == file_size && "read_size != file_size");
+        fclose(file);
+        return buffer;
+    }
+
     std::string const folder;
 private:
 
     // Vector[path, label, size]
-    std::vector<std::tuple<std::string, int, std::size_t>> _images;
-    std::unordered_map<std::string, int> _classes_to_index;
+    Array<Sample> _images;
+    Dict<std::string, int> _classes_to_index;
 
 private:
     // folder_name/classe_name/sample
@@ -65,16 +85,71 @@ private:
 };
 
 
-//class ZippedImageFolder{
-//public:
-//    ZippedImageFolder(const char* file_name)
-//    {
-//        zip_fopen(file, file_name, ZIP_FL_UNCHANGED);
-//        int entries = zip_get_num_entries(file, ZIP_FL_UNCHANGED);
-//    }
+class ZippedImageFolder{
+public:
+    struct Sample{
+        std::string name;
+        int index;
+        int label;
+        std::size_t size;
+    };
 
-//private:
-//    zip_file_t* file;
-//};
+    ZippedImageFolder(std::string const& file_name, bool verbose=true);
+
+    std::tuple<Bytes, int> get_item(int index) const {
+        assert(index >= 0 && std::size_t(index) < _images.size() && "image index out of bounds");
+        const Sample& img_ref = _images[std::size_t(index)];
+
+        Bytes data = load_file(img_ref.index, img_ref.size);
+        return std::make_tuple(data, img_ref.label);
+    }
+
+    int size() const {
+        return int(_images.size());
+    }
+
+    Array<Sample> const& samples() const {
+        return _images;
+    }
+    Dict<std::string, int> const& classes_to_label() const {
+        return _classes_to_index;
+    }
+
+    //! load a file from a zipped archive
+    Bytes load_file(int i, std::size_t file_size) const {
+        DLOG("%s", "Waiting for IO resource");
+        Bytes buffer(file_size);
+
+        TimeIt io_block_time;
+        start_io();
+        RuntimeStats::stat().insert_io_block(io_block_time.stop());
+
+        TimeIt read_time;
+        zip_file_t* file_h = zip_fopen_index(_zip_handle, i, ZIP_FL_UNCHANGED);
+        std::size_t read_size = zip_fread(file_h, &buffer[0], file_size);
+        RuntimeStats::stat().insert_read(read_time.stop(), file_size);
+
+        end_io();
+
+        assert(read_size == file_size && "read_size != file_size");
+        zip_fclose(file_h);
+        return buffer;
+    }
+
+    std::string const file_name;
+private:
+
+    // Vector[path, label, size]
+    Array<Sample> _images;
+    Dict<std::string, int> _classes_to_index;
+
+    zip_t* _zip_handle = nullptr;
+
+private:
+    // folder_name/classe_name/sample
+    void find_all_images();
+};
+
+
 
 #endif

@@ -2,6 +2,7 @@
 #define DATALOADER_JPEG_HEADER_H
 
 #include "image.h"
+#include "utils.h"
 
 #include <turbojpeg.h>
 
@@ -40,6 +41,8 @@ public:
 
     JpegImage(JpegImage const& img);
 
+    JpegImage(Bytes const& img);
+
     JpegImage& inplace_transform(Transform& xform, int flag = TJFLAG_NOREALLOC);
 
     Image decode(int flag = TJFLAG_FASTDCT | TJFLAG_NOREALLOC);
@@ -50,7 +53,7 @@ public:
 
 private:
     tjhandle _decompressor{tjInitDecompress()};
-    std::vector<unsigned char> _image;
+    Bytes _image;
     int _width = 0;
     int _height = 0;
     int _jpeg_subsamp = 0;

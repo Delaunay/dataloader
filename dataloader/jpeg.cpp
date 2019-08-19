@@ -21,6 +21,20 @@ JpegImage::JpegImage(const char* name, std::size_t file_size){
     );
 }
 
+JpegImage::JpegImage(const Bytes& data){
+    _image = data;
+
+    tjDecompressHeader2(
+        _decompressor,
+        _image.data(),
+        _image.size(),
+        &_width,
+        &_height,
+        &_jpeg_subsamp
+    );
+}
+
+
 JpegImage::~JpegImage(){
     tjDestroy(_decompressor);
 }
