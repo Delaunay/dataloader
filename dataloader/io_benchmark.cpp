@@ -22,6 +22,7 @@ int main(int argc, const char* argv[]){
     std::size_t batch_size = 32;
     std::size_t buffering = 3;
     std::size_t max_io_thread = 4;
+    bool zip_dataset = false;
 
     //const char* data_loc = "/home/user1/test_database/imgnet/ImageNet2012_jpeg/train/";
     const char* data_loc = "/media/setepenre/UserData/tmp/fake";
@@ -55,12 +56,30 @@ int main(int argc, const char* argv[]){
             std::stringstream ss(argv[i + 1]);
             ss >> max_io_thread;
         }
+        if ("-zip" == arg){
+            std::stringstream ss(argv[i + 1]);
+            ss >> zip_dataset;
+        }
     }
 
     make_io_lock(max_io_thread);
 
-    ImageFolder dataset(data_loc, single_threaded_loader);
-    DataLoader dataloader(dataset, batch_size, thread_count, buffering, seed, max_io_thread);
+    std::string dataset_bck = "ImageFolder";
+
+    if (zip_dataset){
+        dataset_bck = "ImageFolder";
+    }
+
+    Dataset dataset(dataset_bck, data_loc);
+    DataLoader dataloader(
+        dataset,
+        batch_size,
+        single_threaded_loader,
+        thread_count,
+        buffering,
+        seed,
+        max_io_thread
+    );
 
     TimeIt loop_time;
     for(int i = 0; i < image_to_load; ++i){

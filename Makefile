@@ -11,7 +11,11 @@ test_python:
 
 test_cpp:
 	(cd build && make)
-	./build/bin/io_benchmark --data /media/setepenre/UserData/tmp/train/ -n 32 -b 256 -j 12
+	./build/bin/io_benchmark --data /media/setepenre/UserData/tmp/train/ -n 32 -b 256 -j 12 -io 8
+
+test_cpp2:
+	(cd build && make)
+	./build/bin/io_benchmark --data /media/setepenre/82C8E73CC8E72CDB/data/ImageNet_ILSVRC2017/ILSVRC2017_CLS-LOC/ILSVRC/Data/CLS-LOC/train/ -n 32 -b 256 -j 12 -io 12
 
 test_zip:
 	(cd build && make)

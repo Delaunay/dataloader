@@ -68,7 +68,7 @@ int main(int argc, const char* argv[]){
 
     //try{
         DLOG("Init data set");
-        ImageFolder dataset(data_loc, true);
+        Dataset dataset("ImageFolder", data_loc, true);
         TorchLoader dataloader(dataset, batch_size, thread_count, buffering, seed);
 
         DLOG("Starting training");

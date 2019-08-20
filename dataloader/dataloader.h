@@ -19,9 +19,7 @@ class MappedStorage{
 public:
     MappedStorage(T* ptr, int size):
         _data(ptr), _size(size)
-    {
-        //DLOG("Mapped Storage %i", size);
-    }
+    {}
 
     T  operator[] (int idx) const { return _data[idx]; }
     T& operator[] (int idx)       { return _data[idx]; }
@@ -42,105 +40,89 @@ private:
 };
 
 
-
-
 class DataLoader{
 public:
-    using Path = FS_NAMESPACE::path;
     using Transform = std::function<Image(const Bytes&)>;
-
-    DataLoader(ImageFolder const& dataset, int batch_size_, int worker_cout = 8, int buffering_=1, int seed=0, int io = 0):
-        DataLoader(dataset, batch_size_, single_threaded_loader, worker_cout, buffering_, seed, io)
-    {}
+    using Buffer = std::vector<char>;
 
     /**
      * @brief DataLoader    Loads dataset samples and accumulate them into batches for training
      * @param dataset       Dataset from which the samples are drawn
      * @param batch_size    How many samples to accumulate
+     * @param trans         image transform function Transforms bytes into images
      * @param buffering     How many bathes to work at once
      * @param seed          Seed for the PRNG
+     * @param io            Number of IO threads
      */
-    DataLoader(ImageFolder const& dataset, int batch_size_, Transform trans, int worker_cout = 8, int buffering_=1, int seed=0, int io = 0):
-        dataset(dataset), buffering(buffering_), batch_size(batch_size_),
-        workers(worker_cout), io_threads(io), seed(seed), pool(worker_cout, batch_size_ * buffering_)
-    {
-        DLOG("%s", "init dataloader");
+    DataLoader(const Dataset& dataset,
+               int batch_size_,
+               Transform trans,
+               int worker_cout = 8,
+               int buffering_=1,
+               int seed=0,
+               int io = 0);
 
-        if (io == 0){
-            io = worker_cout;
-        }
+    DataLoader(const Dataset& dataset,
+               int batch_size_,
+               int worker_cout = 8,
+               int buffering_=1,
+               int seed=0,
+               int io = 0):
+        DataLoader(dataset, batch_size_, single_threaded_loader, worker_cout, buffering_, seed, io)
+    {}
 
-        make_io_lock(io);
-
-        image_indices = std::vector<std::size_t>(dataset.size());
-
-        for(std::size_t i = 0; i < std::size_t(dataset.size()); ++i){
-            image_indices[i] = i;
-        }
-
-        shuffle();
-
-        memory_pool = std::vector<uint8_t>(batch_size_ * image_size() * buffering_);
-        image_ready = std::vector<int>(batch_size_ * buffering_, -1);
-
-        for(int i = 0; i < buffering_; ++i){
-            DLOG("%s", "send batch request");
-            send_next_batch();
-        }
+    ~DataLoader(){
+        pool.shutdown(true);
     }
 
+    //! Return the image size in bytes
     std::size_t image_size(){
         return 3 * 224 * 224;
     }
 
-    // return the underlying memory used for image idx
-    MappedStorage<uint8_t> image_mem(int idx){
-        //DLOG("image_mem (idx: %d) (max: %d)", idx, batch_size * buffering);
-        assert(idx >= 0 && idx < batch_size * buffering);
-
-        int size = image_size();
-        return MappedStorage<uint8_t>(memory_pool.data() + idx * size, size);
-    }
-
+    //! Notify that the image is loaded and ready
     void mark_ready(int idx, int label){
         image_ready[idx] = label;
     }
 
+    //! Notify that the image was consumed by the batch reduce
     void mark_empty(int idx){
         image_ready[idx] = -1;
     }
 
+    //! check if an image is loaded and ready to be consumed
     bool is_ready(int idx) const {
         return image_ready[idx] != -1;
     }
 
+    //! Returns the underlying memory used for an image
+    //! You should use `is_ready` to make sure the image data is populated
+    MappedStorage<uint8_t> image_mem(int idx){
+        assert(idx >= 0 && idx < batch_size * buffering);
+        int size = image_size();
+        return MappedStorage<uint8_t>(memory_pool.data() + idx * size, size);
+    }
+
+    //! Returns batch storage idx being the buffering index
     MappedStorage<uint8_t> batch_mem(int idx){
         assert(idx >= 0 && idx < buffering);
         int size = image_size() * batch_size;
         return MappedStorage<uint8_t>(memory_pool.data() + idx * size, size);
     }
 
+    //! Get next image that should be loaded
     std::size_t get_next_image_index();
 
-    std::size_t epoch() const {
-        return _epoch;
-    }
-
+    //! Queue the loading of our next batch
     void send_next_batch();
 
+    //! Get current batch and queue next batch
     std::tuple<std::vector<uint8_t>, std::vector<int>> get_next_item();
 
-    ~DataLoader(){
-        pool.shutdown();
-    }
+    //! Get current batch without queuing future batch
+    std::tuple<std::vector<uint8_t>, std::vector<int>> get_future_batch();
 
-    ImageFolder const& dataset;
-    int const buffering;
-    int const batch_size;
-    int const workers;
-    int const io_threads;
-    int const seed;
-    Transform trans;
+    void shuffle();
 
     void report() const {
         double loop = loop_time.stop();
@@ -149,15 +131,23 @@ public:
     }
 
     void shutdown(){
-        pool.shutdown();
+        pool.shutdown(true);
     }
 
-    std::tuple<std::vector<uint8_t>, std::vector<int>> get_future_batch();
+    std::size_t epoch() const {
+        return _epoch;
+    }
 
-    void shuffle();
+public:
+    const Dataset dataset;
+    int const buffering;
+    int const batch_size;
+    int const workers;
+    int const io_threads;
+    int const seed;
+    Transform trans;
 
 private:
-    using Buffer = std::vector<char>;
     ThreadPool<std::tuple<int, int>, bool> pool;
     std::mutex _lock;
 

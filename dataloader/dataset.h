@@ -19,137 +19,115 @@
 #undef DLOG
 #define DLOG(...)
 
+struct DatasetInterface{
+    virtual ~DatasetInterface(){}
+
+    virtual Dict<std::string, int> const&   classes_to_label()  const = 0;
+
+    virtual std::tuple<Bytes, int>          get_item(int index) const = 0;
+
+    virtual std::size_t                     size()              const = 0;
+};
+
 // Mirror Pytorch ImageFolder
 // except it does not do the transformation this should be done in the loader
-class ImageFolder{
+class ImageFolder: public DatasetInterface{
 public:
+    struct Sample;
+
     using Path = FS_NAMESPACE::path;
 
+    ImageFolder (std::string const& folder_name, bool verbose=true);
+
+    Dict<std::string, int> const&   classes_to_label()  const override;
+
+    std::tuple<Bytes, int>          get_item(int index) const override;
+
+    std::size_t                     size()              const override;
+
+    ~ImageFolder();
+
+    Array<Sample> const& samples() const;
+
+    void find_all_images(Path const& folder_name, int class_index=-1);
+
+    // Load files from disk
+    Bytes load_file(std::string const& file_name, std::size_t file_size) const;
+
+public:
+    std::string const folder;
+
+public:
     struct Sample{
-        std::string name;
-        int label;
-        std::size_t size;
+        std::string name;   //! full path to the file
+        int label;          //! file label
+        std::size_t size;   //! file size
     };
 
-    ImageFolder(std::string const& folder_name, bool verbose=true);
-
-    std::tuple<Bytes, int> get_item(int index) const {
-        assert(index >= 0  && std::size_t(index) < _images.size() && "image index out of bounds");
-        auto img_ref = _images[std::size_t(index)];
-
-        Bytes data = load_file(img_ref.name, img_ref.size);
-        return std::make_tuple(data, img_ref.label);
-    }
-
-    std::size_t size() const {
-        return _images.size();
-    }
-
-    Array<Sample> const& samples() const {
-        return _images;
-    }
-    Dict<std::string, int> const& classes_to_label() const {
-        return _classes_to_index;
-    }
-
-    Bytes load_file(std::string const& file_name, std::size_t file_size) const {
-        Bytes buffer(file_size);
-
-        DLOG("%s", "Waiting for IO resource");
-        TimeIt io_block_time;
-        start_io();
-        RuntimeStats::stat().insert_io_block(io_block_time.stop());
-
-        TimeIt read_time;
-        FILE* file = fopen(file_name.c_str(), "r");
-        std::size_t read_size = fread(&buffer[0], sizeof(unsigned char), file_size, file);
-        RuntimeStats::stat().insert_read(read_time.stop(), file_size);
-
-        end_io();
-
-        assert(read_size == file_size && "read_size != file_size");
-        fclose(file);
-        return buffer;
-    }
-
-    std::string const folder;
 private:
-
-    // Vector[path, label, size]
-    Array<Sample> _images;
-    Dict<std::string, int> _classes_to_index;
-
-private:
-    // folder_name/classe_name/sample
-    void find_all_images(Path const& folder_name, int class_index=-1);
+    Array<Sample>           _images;
+    Dict<std::string, int>  _classes_to_index;
 };
 
 
-class ZippedImageFolder{
+//! Load a Zip file organized as an ImageFolder
+class ZippedImageFolder: public DatasetInterface{
 public:
-    struct Sample{
-        std::string name;
-        int index;
-        int label;
-        std::size_t size;
-    };
+    struct Sample;
 
     ZippedImageFolder(std::string const& file_name, bool verbose=true);
 
-    std::tuple<Bytes, int> get_item(int index) const {
-        assert(index >= 0 && std::size_t(index) < _images.size() && "image index out of bounds");
-        const Sample& img_ref = _images[std::size_t(index)];
+    Dict<std::string, int> const&   classes_to_label()  const override;
 
-        Bytes data = load_file(img_ref.index, img_ref.size);
-        return std::make_tuple(data, img_ref.label);
-    }
+    std::tuple<Bytes, int>          get_item(int index) const override;
 
-    int size() const {
-        return int(_images.size());
-    }
+    std::size_t                     size()              const override;
 
-    Array<Sample> const& samples() const {
-        return _images;
-    }
-    Dict<std::string, int> const& classes_to_label() const {
-        return _classes_to_index;
-    }
+    ~ZippedImageFolder();
 
-    //! load a file from a zipped archive
-    Bytes load_file(int i, std::size_t file_size) const {
-        DLOG("%s", "Waiting for IO resource");
-        Bytes buffer(file_size);
+    Array<Sample> const& samples() const;
 
-        TimeIt io_block_time;
-        start_io();
-        RuntimeStats::stat().insert_io_block(io_block_time.stop());
-
-        TimeIt read_time;
-        zip_file_t* file_h = zip_fopen_index(_zip_handle, i, ZIP_FL_UNCHANGED);
-        std::size_t read_size = zip_fread(file_h, &buffer[0], file_size);
-        RuntimeStats::stat().insert_read(read_time.stop(), file_size);
-
-        end_io();
-
-        assert(read_size == file_size && "read_size != file_size");
-        zip_fclose(file_h);
-        return buffer;
-    }
-
-    std::string const file_name;
-private:
-
-    // Vector[path, label, size]
-    Array<Sample> _images;
-    Dict<std::string, int> _classes_to_index;
-
-    zip_t* _zip_handle = nullptr;
-
-private:
-    // folder_name/classe_name/sample
     void find_all_images();
+
+    // Load a file from a zipped archive
+    Bytes load_file(int i, std::size_t file_size) const;
+
+public:
+    std::string const file_name;
+
+public:
+    struct Sample{
+        std::string name; //! full path to the file inside the ZIP
+        int index;        //! index of the file inside the ZIP
+        int label;        //! Label of the file
+        std::size_t size; //! file size
+    };
+
+private:
+    Array<Sample>           _images;
+    Dict<std::string, int>  _classes_to_index;
+    zip_t*                  _zip_handle = nullptr;
 };
 
+/*! High Level API for datasets
+ *
+ * Parameters
+ * ----------
+ * backend      : name of the dataset backend
+ * folder_name  : folder/file to load
+ * verbose      : print some information about the dataset
+ */
+struct Dataset{
+    Dataset(const std::string& backend, std::string const& folder_name, bool verbose=true);
 
+    Dict<std::string, int> const&   classes_to_label()  const;
+
+    std::tuple<Bytes, int>          get_item(int index) const;
+
+    std::size_t                     size()              const;
+
+private:
+    std::shared_ptr<DatasetInterface> _impl = nullptr;
+};
 
 #endif

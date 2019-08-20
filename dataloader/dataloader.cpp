@@ -1,10 +1,37 @@
 #include "dataloader.h"
 
 #include <cstring>
-
 #include <iostream>
 #include <thread>
 
+DataLoader::DataLoader(const Dataset& dataset, int batch_size_, Transform trans, int worker_cout, int buffering_, int seed, int io):
+    dataset(dataset), buffering(buffering_), batch_size(batch_size_),
+    workers(worker_cout), io_threads(io), seed(seed), trans(trans), pool(worker_cout, batch_size_ * buffering_)
+{
+    DLOG("%s", "init dataloader");
+
+    if (io == 0){
+        io = worker_cout;
+    }
+
+    make_io_lock(io);
+
+    image_indices = std::vector<std::size_t>(dataset.size());
+
+    for(std::size_t i = 0; i < std::size_t(dataset.size()); ++i){
+        image_indices[i] = i;
+    }
+
+    shuffle();
+
+    memory_pool = std::vector<uint8_t>(batch_size_ * image_size() * buffering_);
+    image_ready = std::vector<int>(batch_size_ * buffering_, -1);
+
+    for(int i = 0; i < buffering_; ++i){
+        DLOG("%s", "send batch request");
+        send_next_batch();
+    }
+}
 
 std::tuple<std::vector<uint8_t>, std::vector<int> > DataLoader::get_next_item(){
     DLOG("getting batch");
@@ -17,8 +44,6 @@ std::tuple<std::vector<uint8_t>, std::vector<int> > DataLoader::get_next_item(){
 
 
 std::size_t DataLoader::get_next_image_index(){
-    //DLOG("get_next_image_index");
-
     std::size_t i = image_iterator;
     image_iterator += 1;
 
@@ -38,6 +63,7 @@ void DataLoader::send_next_batch(){
     DLOG("> Send next batch (retrieve_batch_id: %d) (sending_batch_id: %d)", retrieve_batch, sent_batch);
 
     TimeIt schedule_time;
+    assert(trans != nullptr);
 
     for(int i = 0; i < batch_size;){
         int index = int(get_next_image_index());
@@ -55,7 +81,8 @@ void DataLoader::send_next_batch(){
             std::tuple<Bytes, int> sample = dataset.get_item(index);
 
             // Transform Image
-            Image img = trans(std::get<0>(sample));
+            const Bytes& data = std::get<0>(sample);
+            Image img = trans(data);
 
             // Copy to storage
             assert(mem.size() == img.size());
