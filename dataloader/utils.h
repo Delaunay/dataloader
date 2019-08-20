@@ -35,6 +35,8 @@ void print_log(const char * fmt) {
 }
 
 #define DLOG(...) print_log(__VA_ARGS__)
+#define ILOG(...) print_log(__VA_ARGS__)
+#define WLOG(...) print_log(__VA_ARGS__)
 #define ELOG(...) print_log(__VA_ARGS__)
 
 

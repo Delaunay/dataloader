@@ -17,6 +17,7 @@ SET(DATALOADER_HDS
     pool.h
     loader.h
     dataloader.h
+    zip_handles.h
 )
 
 SET(DATALOADER_SRC

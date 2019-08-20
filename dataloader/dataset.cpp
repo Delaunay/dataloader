@@ -3,9 +3,13 @@
 
 #include <string>
 #include <iostream>
+#include <list>
 
 #undef DLOG
+#define DEBUG_PRINT(X) X
 #define DLOG(...)
+#define DEBUG_PRINT(X)
+
 
 ImageFolder::ImageFolder(std::string const& folder_name, bool verbose):
     folder(folder_name)
@@ -89,15 +93,14 @@ Bytes ImageFolder::load_file(std::string const& file_name, std::size_t file_size
 // ZippedImageFolder
 // -----------------------------------------------------------------------
 
+
+
 ZippedImageFolder::ZippedImageFolder(std::string const& file_name, bool verbose):
-    file_name(file_name)
+    file_name(file_name), _handles(file_name)
 {
     DLOG("Init Image Folder Main Ctor");
 
     TimeIt init_time;
-    int error;
-    _zip_handle = zip_open(file_name.c_str(), ZIP_RDONLY, &error);
-
     find_all_images();
     double time = init_time.stop();
 
@@ -125,15 +128,18 @@ std::string get_class_name(const std::string& path){
         if (pos == count)
             return path.substr(0, i - 1);
     }
+    return path;
 }
 
 void ZippedImageFolder::find_all_images(){
     DLOG("find_all_images");
-    int entries = zip_get_num_entries(_zip_handle, ZIP_FL_UNCHANGED);
+
+    auto handle = _handles.get_zip();
+    int entries = zip_get_num_entries(handle, ZIP_FL_UNCHANGED);
 
     for(int i = 0; i < entries; ++i){
         zip_stat_t stat;
-        zip_stat_index(_zip_handle, i,  ZIP_FL_UNCHANGED, &stat);
+        zip_stat_index(handle, i,  ZIP_FL_UNCHANGED, &stat);
 
         std::string class_name = get_class_name(stat.name);
         int count = _classes_to_index.count(class_name);
@@ -148,13 +154,14 @@ void ZippedImageFolder::find_all_images(){
 
         // this is a file not a folder
         if (stat.size > 0){
-            _images.push_back({stat.name, stat.index, class_index, stat.size});
+            _images.push_back({stat.name, int(stat.index), int(class_index), int(stat.size)});
         }
 
     }
 }
 
-ZippedImageFolder::~ZippedImageFolder(){}
+ZippedImageFolder::~ZippedImageFolder(){
+}
 
 std::tuple<Bytes, int> ZippedImageFolder::get_item(int index) const {
     assert(index >= 0 && std::size_t(index) < _images.size() && "image index out of bounds");
@@ -185,11 +192,20 @@ Bytes ZippedImageFolder::load_file(int i, std::size_t file_size) const {
     RuntimeStats::stat().insert_io_block(io_block_time.stop());
 
     TimeIt read_time;
-    zip_file_t* file_h = zip_fopen_index(_zip_handle, i, ZIP_FL_UNCHANGED);
+    auto handle = _handles.get_zip();
+    zip_file_t* file_h = zip_fopen_index(handle, i, ZIP_FL_UNCHANGED);
+
+    assert(file_h != nullptr);
     std::size_t read_size = zip_fread(file_h, &buffer[0], file_size);
     RuntimeStats::stat().insert_read(read_time.stop(), file_size);
 
     end_io();
+
+    DEBUG_PRINT(
+        zip_stat_t stat;
+        zip_stat_index(handle, i, ZIP_FL_UNCHANGED, &stat);
+        DLOG("read file (file: %s)", stat.name);
+    )
 
     assert(read_size == file_size && "read_size != file_size");
     zip_fclose(file_h);

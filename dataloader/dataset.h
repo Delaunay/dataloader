@@ -7,6 +7,7 @@
 #include "runtime.h"
 #include "utils.h"
 #include "io.h"
+#include "zip_handles.h"
 
 #include <future>
 #include <tuple>
@@ -15,9 +16,6 @@
 #include <cassert>
 
 #include <zip.h>
-
-#undef DLOG
-#define DLOG(...)
 
 struct DatasetInterface{
     virtual ~DatasetInterface(){}
@@ -106,7 +104,7 @@ public:
 private:
     Array<Sample>           _images;
     Dict<std::string, int>  _classes_to_index;
-    zip_t*                  _zip_handle = nullptr;
+    mutable ZipHandles      _handles;
 };
 
 /*! High Level API for datasets

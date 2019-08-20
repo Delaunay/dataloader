@@ -16,34 +16,3 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
         .def("report", &PyTorchLoader::report);
 }
 
-/*
-static auto registry =
-  torch::jit::("my_ops::warp_perspective", &warp_perspective)
-  .op("loader::another_op", &another_op)
-  .op("my_ops::and_another_op", &and_another_op);*/
-
-
-/*
-cd lib
-mv libcpploader.so cpploader.so
-python -c "import cpploader; img = cpploader.ImageFolder('/media/setepenre/UserData/tmp/fake', True); data = cpploader.Loader(img, 256, 6, 2, 0, 0); data.shutdown(); data.report(); print('done')"
-
-
-import cpploader
-
-img = cpploader.ImageFolder('/media/setepenre/UserData/tmp/fake', True)
-data = cpploader.Loader(img, 256, 6, 8, 10, 0)
-
-for i in range(1, 10):
-    batch = data.next()
-
-    print(data)
-
-    if i > 10:
-        break
-
-
-data.shutdown()
-print('done')
-
- */

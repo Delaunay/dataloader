@@ -67,7 +67,7 @@ int main(int argc, const char* argv[]){
     std::string dataset_bck = "ImageFolder";
 
     if (zip_dataset){
-        dataset_bck = "ImageFolder";
+        dataset_bck = "ZippedImageFolder";
     }
 
     Dataset dataset(dataset_bck, data_loc);

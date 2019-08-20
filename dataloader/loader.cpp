@@ -26,6 +26,8 @@ Image single_threaded_loader(const Bytes &data){
     // decode
     TimeIt decode_time;
     Image img = jpeg.decode();
+
+    DLOG("done");
     RuntimeStats::stat().insert_decode(decode_time.stop(), img.size());
 
     DLOG("%s - %d", "Scaling", int(img(112, 112)));

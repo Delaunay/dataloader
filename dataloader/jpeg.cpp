@@ -1,14 +1,19 @@
 #include "jpeg.h"
 #include "io.h"
+#include "utils.h"
 
 #include <cstdio>
 #include <cstring>
+
+#undef DLOG
+#define DLOG(...)
 
 Transform::Transform(){
     memset(&xform, 0, sizeof(tjtransform));
 }
 
 JpegImage::JpegImage(const char* name, std::size_t file_size){
+    DLOG("Init Jpeg from file");
     _image = load_file(name, file_size);
 
     tjDecompressHeader2(
@@ -19,12 +24,16 @@ JpegImage::JpegImage(const char* name, std::size_t file_size){
         &_height,
         &_jpeg_subsamp
     );
+
+    assert(_width > 0 && _height > 0);
 }
 
 JpegImage::JpegImage(const Bytes& data){
-    _image = data;
+    DLOG("Init Jpeg from buffer");
+    _image = Bytes(data);
 
-    tjDecompressHeader2(
+    assert(_image.size() > 0);
+    int rc = tjDecompressHeader2(
         _decompressor,
         _image.data(),
         _image.size(),
@@ -32,6 +41,11 @@ JpegImage::JpegImage(const Bytes& data){
         &_height,
         &_jpeg_subsamp
     );
+
+    if (rc != 0){
+        DLOG("header read (rc: %d) => %s", rc, tjGetErrorStr2(_decompressor));
+    }
+    assert(_width > 0 && _height > 0);
 }
 
 
@@ -71,8 +85,10 @@ Image JpegImage::decode(int flag){
     // Decode
     std::vector<unsigned char> buffer(std::size_t(width() * height() * 3));
 
+    DLOG("decoding");
     tjDecompress2(_decompressor, _image.data(), _image.size(), buffer.data(), width(), 0, height(), TJPF_RGB, flag);
 
+    DLOG("decoded");
     return Image(buffer, width(), height());
 }
 
