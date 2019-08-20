@@ -67,6 +67,36 @@ private:
     Dict<std::string, int>  _classes_to_index;
 };
 
+// for mmap:
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+struct MMapFile{
+    MMapFile(const char* fname){
+        _fd = open(fname, O_RDONLY);
+        posix_fadvise(_fd, 0, 0, POSIX_FADV_RANDOM);
+
+        struct stat sb;
+        fstat(_fd, &sb);
+
+        _length = sb.st_size;
+
+        // memory map the file to RAM
+        _addr = mmap(NULL, _length, PROT_READ, MAP_SHARED, _fd, 0u);
+    }
+
+    ~MMapFile(){
+        munmap(_addr, _length);
+        close(_fd);
+    }
+
+private:
+    int    _fd;
+    size_t _length;
+    void*  _addr;
+};
 
 //! Load a Zip file organized as an ImageFolder
 class ZippedImageFolder: public DatasetInterface{
@@ -105,6 +135,7 @@ private:
     Array<Sample>           _images;
     Dict<std::string, int>  _classes_to_index;
     mutable ZipHandles      _handles;
+    MMapFile                _mmap;
 };
 
 /*! High Level API for datasets

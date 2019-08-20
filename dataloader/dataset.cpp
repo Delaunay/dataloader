@@ -5,6 +5,7 @@
 #include <iostream>
 #include <list>
 
+
 #undef DLOG
 #define DEBUG_PRINT(X) X
 #define DLOG(...)
@@ -96,7 +97,7 @@ Bytes ImageFolder::load_file(std::string const& file_name, std::size_t file_size
 
 
 ZippedImageFolder::ZippedImageFolder(std::string const& file_name, bool verbose):
-    file_name(file_name), _handles(file_name)
+    file_name(file_name), _handles(file_name), _mmap(file_name.c_str())
 {
     DLOG("Init Image Folder Main Ctor");
 
@@ -154,7 +155,7 @@ void ZippedImageFolder::find_all_images(){
 
         // this is a file not a folder
         if (stat.size > 0){
-            _images.push_back({stat.name, int(stat.index), int(class_index), int(stat.size)});
+            _images.push_back({stat.name, stat.index, int(class_index), int(stat.size)});
         }
 
     }

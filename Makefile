@@ -19,7 +19,7 @@ test_cpp2:
 
 test_zip:
 	(cd build && make)
-	./build/bin/io_benchmark -zip 1 --data /media/setepenre/UserData/tmp/train.zip -n 32 -b 256 -j 12 -io 4
+	./build/bin/io_benchmark -zip 1 --data /media/setepenre/UserData/tmp/train.zip -n 32 -b 256 -j 8 -io 6
 
 test_zip2:
 	(cd build && make)
