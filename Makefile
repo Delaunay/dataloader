@@ -11,7 +11,7 @@ test_python:
 
 test_cpp:
 	(cd build && make)
-	./build/bin/io_benchmark --data /media/setepenre/UserData/tmp/train/ -n 32 -b 256 -j 12 -io 8
+	./build/bin/io_benchmark --data /media/setepenre/UserData/tmp/train/ -n 32 -b 256 -j 12 -io 8 --seed 12
 
 test_cpp2:
 	(cd build && make)
@@ -19,7 +19,7 @@ test_cpp2:
 
 test_zip:
 	(cd build && make)
-	./build/bin/io_benchmark -zip 1 --data /media/setepenre/UserData/tmp/train.zip -n 32 -b 256 -j 8 -io 6
+	./build/bin/io_benchmark -zip 1 --data /media/setepenre/UserData/tmp/train.zip -n 32 -b 256 -j 12 -io 6
 
 test_zip2:
 	(cd build && make)

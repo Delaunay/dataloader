@@ -135,7 +135,7 @@ private:
     Array<Sample>           _images;
     Dict<std::string, int>  _classes_to_index;
     mutable ZipHandles      _handles;
-    MMapFile                _mmap;
+    // MMapFile                _mmap;
 };
 
 /*! High Level API for datasets

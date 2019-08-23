@@ -66,6 +66,11 @@ public:
         total_io_block.store(total_io_block.load() + time);
     }
 
+    std::atomic<double> total_handle_reserve{0};
+
+    void insert_handle_reserve(double time){
+        total_handle_reserve.store(total_handle_reserve.load() + time);
+    }
 
     std::atomic<double> total_time_schedule{0};
 

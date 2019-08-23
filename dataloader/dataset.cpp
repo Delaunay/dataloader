@@ -97,7 +97,7 @@ Bytes ImageFolder::load_file(std::string const& file_name, std::size_t file_size
 
 
 ZippedImageFolder::ZippedImageFolder(std::string const& file_name, bool verbose):
-    file_name(file_name), _handles(file_name), _mmap(file_name.c_str())
+    file_name(file_name), _handles(file_name)//, _mmap(file_name.c_str())
 {
     DLOG("Init Image Folder Main Ctor");
 
@@ -187,16 +187,18 @@ Dict<std::string, int> const& ZippedImageFolder::classes_to_label() const {
 Bytes ZippedImageFolder::load_file(int i, std::size_t file_size) const {
     DLOG("%s", "Waiting for IO resource");
     Bytes buffer(file_size);
+    TimeIt handle_reserve;
+    auto handle = _handles.get_zip();
+    RuntimeStats::stat().insert_handle_reserve(handle_reserve.stop());
 
     TimeIt io_block_time;
     start_io();
     RuntimeStats::stat().insert_io_block(io_block_time.stop());
 
     TimeIt read_time;
-    auto handle = _handles.get_zip();
     zip_file_t* file_h = zip_fopen_index(handle, i, ZIP_FL_UNCHANGED);
-
     assert(file_h != nullptr);
+
     std::size_t read_size = zip_fread(file_h, &buffer[0], file_size);
     RuntimeStats::stat().insert_read(read_time.stop(), file_size);
 

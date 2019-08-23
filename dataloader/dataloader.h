@@ -9,6 +9,7 @@
 #include <random>
 #include <algorithm>
 
+#include "sampler.h"
 #include "utils.h"
 
 #undef DLOG
@@ -40,6 +41,7 @@ private:
 };
 
 
+
 class DataLoader{
 public:
     using Transform = std::function<Image(const Bytes&)>;
@@ -55,6 +57,7 @@ public:
      * @param io            Number of IO threads
      */
     DataLoader(const Dataset& dataset,
+               const Sampler& sampler,
                int batch_size_,
                Transform trans,
                int worker_cout = 8,
@@ -63,12 +66,13 @@ public:
                int io = 0);
 
     DataLoader(const Dataset& dataset,
+               const Sampler& sampler,
                int batch_size_,
                int worker_cout = 8,
                int buffering_=1,
                int seed=0,
                int io = 0):
-        DataLoader(dataset, batch_size_, single_threaded_loader, worker_cout, buffering_, seed, io)
+        DataLoader(dataset, sampler, batch_size_, single_threaded_loader, worker_cout, buffering_, seed, io)
     {}
 
     ~DataLoader(){
@@ -110,9 +114,6 @@ public:
         return MappedStorage<uint8_t>(memory_pool.data() + idx * size, size);
     }
 
-    //! Get next image that should be loaded
-    std::size_t get_next_image_index();
-
     //! Queue the loading of our next batch
     void send_next_batch();
 
@@ -121,8 +122,6 @@ public:
 
     //! Get current batch without queuing future batch
     std::tuple<std::vector<uint8_t>, std::vector<int>> get_future_batch();
-
-    void shuffle();
 
     void report() const {
         double loop = loop_time.stop();
@@ -135,11 +134,12 @@ public:
     }
 
     std::size_t epoch() const {
-        return _epoch;
+        return sampler.epoch();
     }
 
 public:
     const Dataset dataset;
+    Sampler   sampler;
     int const buffering;
     int const batch_size;
     int const workers;
@@ -150,10 +150,6 @@ public:
 private:
     ThreadPool<std::tuple<int, int>, bool> pool;
     std::mutex _lock;
-
-    // shuffuled
-    std::vector<std::size_t> image_indices{dataset.size()};
-
     // little allocation is done most of the memory is allocated once and reused
     std::vector<uint8_t> memory_pool;
 
@@ -167,11 +163,6 @@ private:
     std::size_t sent_batch = 0;
     std::size_t retrieve_batch = 0;
 
-    std::mt19937 prng_engine{seed};
-    std::size_t image_iterator = 0;
-
-    bool reshuffle_after_epoch = false;
-    std::size_t _epoch = 0;
     TimeIt loop_time;
 };
 

@@ -5,6 +5,7 @@
 
 #include <mutex>
 #include <vector>
+
 #include <zip.h>
 
 /*!
@@ -41,16 +42,22 @@ public:
     };
 
 public:
-    ZipHandles(std::string const& file_name):
+    ZipHandles(std::string const& file_name, int size=12):
         file_name(file_name)
-    {}
+    {
+        for(int i = 0; i < size; ++i){
+             make_handle();
+        }
+    }
 
     ZipHandle get_zip(){
         std::lock_guard lock(mutex);
 
-        for(int i = 0; i < handles.size(); ++i){
+        for(int i = 0, n = int(handles.size()); i < n; ++i){
             Item& item = handles[i];
             if (item.free){
+                // DLOG("use handle %d", i);
+                item.index = i;
                 item.free = false;
                 return ZipHandle(item, this);
             }
@@ -65,8 +72,17 @@ public:
         return ZipHandle(item, this);
     }
 
+    void make_handle(){
+        DLOG("Create a new zip handle %d", int(handles.size()));
+        int error = 0;
+        zip_t* data = zip_open(file_name.c_str(), ZIP_RDONLY, &error);
+        Item item{data, true, int(handles.size())};
+        handles.push_back(item);
+    }
+
     void free_handle(int idx){
         // if we do not lock we risk the vector to resize in between
+        // DLOG("release handle %d", idx);
         std::lock_guard lock(mutex);
         handles[idx].free = true;
     }

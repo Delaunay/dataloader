@@ -42,5 +42,6 @@ dependencies/SDL_ttf/
 dist/
 dataloader.egg-info/
 cpploader.egg-info/
+*.out*
 
 

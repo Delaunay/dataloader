@@ -23,6 +23,7 @@ int main(int argc, const char* argv[]){
     std::size_t buffering = 3;
     std::size_t max_io_thread = 4;
     bool zip_dataset = false;
+    bool seq_sampler = false;
 
     //const char* data_loc = "/home/user1/test_database/imgnet/ImageNet2012_jpeg/train/";
     const char* data_loc = "/media/setepenre/UserData/tmp/fake";
@@ -60,19 +61,32 @@ int main(int argc, const char* argv[]){
             std::stringstream ss(argv[i + 1]);
             ss >> zip_dataset;
         }
+        if ("-seq" == arg){
+            std::stringstream ss(argv[i + 1]);
+            ss >> seq_sampler;
+        }
     }
 
+    printf("io: %ul\n", max_io_thread);
     make_io_lock(max_io_thread);
 
     std::string dataset_bck = "ImageFolder";
+    std::string sampler_bck = "RandomSampler";
 
     if (zip_dataset){
         dataset_bck = "ZippedImageFolder";
     }
+    if (seq_sampler){
+        sampler_bck = "SequentialSampler";
+    }
+    printf("sampler: %s\n", sampler_bck.c_str());
+    printf("dataset: %s\n", dataset_bck.c_str());
 
     Dataset dataset(dataset_bck, data_loc);
+    Sampler sampler(sampler_bck, dataset.size(), seed);
     DataLoader dataloader(
         dataset,
+        sampler,
         batch_size,
         single_threaded_loader,
         thread_count,

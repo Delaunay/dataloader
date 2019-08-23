@@ -36,6 +36,7 @@ void RuntimeStats::report(double loop, double thread_count, int max_io_thread){
     printf(" - Compression Ratio before scaling %.4f\n", double(total_size_decode.load()) / double(total_size_read.load()));
     printf(" - Compression Ratio after scaling %.4f\n", double(total_size_scaling.load()) / double(total_size_read.load()));
     printf(" - IO wait %.4f sec\n", total_io_block.load());
+    printf(" - Handle Reserve %.4f sec\n", total_handle_reserve.load());
     printf("---------------------------------------------------\n");
 
 

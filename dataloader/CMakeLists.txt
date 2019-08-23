@@ -17,6 +17,7 @@ SET(DATALOADER_HDS
     pool.h
     loader.h
     dataloader.h
+    sampler.h
     zip_handles.h
 )
 
@@ -31,6 +32,7 @@ SET(DATALOADER_SRC
     pool.cpp
     loader.cpp
     runtime.cpp
+    sampler.cpp
     dataloader.cpp
 )
 
