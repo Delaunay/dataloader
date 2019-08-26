@@ -87,14 +87,14 @@ include_directories(${Python_INCLUDE_DIRS})
 IF (BUILD_PYTHON_MODULE)
     LINK_DIRECTORIES(../dependencies/libtorch/lib)
 
-    ADD_LIBRARY(cpploader MODULE pyloader.cpp pytorchloader.h torchloader.h torchloader.cpp ${DATALOADER_SRC})
+    ADD_LIBRARY(cpploader MODULE pyloader.cpp pytorchloader.h torchloader.h torchloader.cpp)
     MESSAGE(STATUS ${TORCH_LIBRARIES})
     TARGET_LINK_LIBRARIES(cpploader PUBLIC
         ${FILESYSTEM_LIB}
         ${TurboJPEG_LIBRARIES}
         ${TORCH_LIBRARIES}
 
-        # dataloader
+        dataloader
         pybind11::module
         # numpy stuff
         torch_python
@@ -110,10 +110,20 @@ IF (BUILD_PYTHON_MODULE)
             $<TARGET_FILE_DIR:cpploader>)
 ENDIF(BUILD_PYTHON_MODULE)
 
-ADD_EXECUTABLE(test_jit test_jit.cpp torchloader.cpp dataset.cpp ${DATALOADER_HDS} ${DATALOADER_SRC})
-TARGET_LINK_LIBRARIES(test_jit
-    ${TurboJPEG_LIBRARIES}
-    ${TORCH_LIBRARIES}
-    ${FILESYSTEM_LIB}
-)
-SET_PROPERTY(TARGET test_jit PROPERTY CXX_STANDARD 17)
+
+macro(torch_executable name)
+    ADD_EXECUTABLE(${name} ${name}.cpp torchloader.cpp torchloader.h dataset.cpp sampler.cpp)
+    TARGET_LINK_LIBRARIES(${name} ${TORCH_LIBRARIES} ${FILESYSTEM_LIB} ${TurboJPEG_LIBRARIES} dataloader zip)
+    SET_PROPERTY(TARGET ${name} PROPERTY CXX_STANDARD 17)
+endmacro(torch_executable)
+
+torch_executable(test_jit)
+
+#ADD_EXECUTABLE(test_jit test_jit.cpp torchloader.cpp)
+#TARGET_LINK_LIBRARIES(test_jit
+#    dataloader
+#    ${TurboJPEG_LIBRARIES}
+#
+#    ${FILESYSTEM_LIB}
+#)
+#SET_PROPERTY(TARGET test_jit PROPERTY CXX_STANDARD 17)

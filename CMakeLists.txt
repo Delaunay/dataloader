@@ -54,7 +54,8 @@ OPTION(BUILD_EXAMPLES       "Build Examples"         OFF)
 OPTION(BUILD_DOCUMENTATION  "Build docs"             OFF)
 OPTION(BUILD_DOXYGEN        "Build Doxygen docs"     OFF)
 OPTION(BUILD_SPHINX         "Build Sphinx docs"      OFF)
-OPTION(BUILD_PYTHON_MODULE  "Build Python Extension"  ON)
+# This does not work, you should use the python setup.py
+OPTION(BUILD_PYTHON_MODULE  "Build Python Extension" OFF)
 
 # Binary/pre-compiled Dependencies
 # ====================================

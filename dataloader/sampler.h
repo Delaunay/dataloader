@@ -2,6 +2,7 @@
 #define DATALOADER_SAMPLERHEADER_H
 
 #include <random>
+#include <functional>
 #include <algorithm>
 
 #include "utils.h"
@@ -19,6 +20,69 @@ class AbstractSampler{
 
     virtual ~AbstractSampler() = default;
 };
+
+
+// Public API
+class Sampler{
+public:
+    Sampler(std::string const& sampler, int size, int seed);
+
+    void init_state(int size, int seed=0){
+        DLOG("Init State (size: %d, seed: %d", size, seed);
+        return _sampler->init_state(size, seed);
+    }
+
+    std::size_t sample(){
+        return _sampler->sample();
+    }
+
+    void shuffle(){
+        return _sampler->shuffle();
+    }
+
+    int sampled_count() const {
+        return _sampler->sampled_count();
+    }
+
+    int epoch() const {
+        return _sampler->epoch();
+    }
+
+private:
+    template<typename T>
+    static std::shared_ptr<AbstractSampler> make(){
+        return std::make_shared<T>();
+    }
+
+    static Dict<std::string, std::shared_ptr<AbstractSampler>(*)()> init_factories();
+
+    static Dict<std::string, std::shared_ptr<AbstractSampler>(*)()>& factories(){
+        static Dict<std::string, std::shared_ptr<AbstractSampler>(*)()> _factories = init_factories();
+        return _factories;
+    }
+
+public:
+    //! Register a custom backend
+    template<typename T>
+    static void register_sampler(std::string const& name){
+        factories()[name] = make<T>;
+    }
+
+    //! return all the names of the registered backend
+    std::vector<std::string> registered_backend(){
+        std::vector<std::string> keys;
+        keys.reserve(factories().size());
+
+        for (auto& val: factories()){
+            keys.push_back(val.first);
+        }
+        return keys;
+    }
+
+private:
+    std::shared_ptr<AbstractSampler> _sampler = nullptr;
+};
+
 
 class RandomSampler: public AbstractSampler{
 public:
@@ -97,44 +161,6 @@ public:
 private:
     int                      _epoch           = 0;
     int                      current_position = 0;
-};
-
-
-// Public API
-class Sampler{
-public:
-    Sampler(std::string const& sampler, int size, int seed){
-        if (sampler == "RandomSampler"){
-            _sampler = std::make_shared<RandomSampler>();
-        } else {
-            _sampler = std::make_shared<SequentialSampler>();
-        }
-        init_state(size, seed);
-    }
-
-    void init_state(int size, int seed=0){
-        DLOG("Init State (size: %d, seed: %d", size, seed);
-        return _sampler->init_state(size, seed);
-    }
-
-    std::size_t sample(){
-        return _sampler->sample();
-    }
-
-    void shuffle(){
-        return _sampler->shuffle();
-    }
-
-    int sampled_count() const {
-        return _sampler->sampled_count();
-    }
-
-    int epoch() const {
-        return _sampler->epoch();
-    }
-
-private:
-    std::shared_ptr<AbstractSampler> _sampler = nullptr;
 };
 
 #endif

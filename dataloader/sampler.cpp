@@ -1,5 +1,23 @@
 #include "sampler.h"
 
+Dict<std::string, std::shared_ptr<AbstractSampler>(*)()> Sampler::init_factories(){
+    Dict<std::string, std::shared_ptr<AbstractSampler>(*)()> _factories;
+
+    _factories["RandomSampler"] = make<RandomSampler>;
+    _factories["SequentialSampler"] = make<SequentialSampler>;
+
+    return _factories;
+}
+
+Sampler::Sampler(std::string const& sampler, int size, int seed){
+    std::shared_ptr<AbstractSampler>(*factory)() = factories()[sampler];
+
+    if (factory != nullptr){
+        _sampler = factory();
+        init_state(size, seed);
+    }
+}
+
 void RandomSampler::init_state(int size_, int seed){
     seed             = 0;
     size             = std::max(size, size_);
