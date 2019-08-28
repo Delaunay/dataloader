@@ -3,8 +3,38 @@ Dataloader
 
 # Pytorch Extension
 
+## Easy Install
 
 
+    python setup.py --user
+
+
+## Minimal Exampler
+
+    import cpploader
+
+    print('Creating Dataset')
+    folder = cpploader.Dataset(backend, '/imagenet_folder_train/', True)
+
+    print('Creating Sampler')
+    sampler = cpploader.Sampler('RandomSampler', folder.size(), args.seed)
+
+    print('Setting up Loader')
+    loader = cpploader.Loader(
+        folder,
+        sampler,
+        args.batch_size,
+        args.threads,
+        args.buffering,
+        args.seed,
+        args.mx_io
+    )
+
+    batch, targets = loader.next()
+
+    batch = batch.float().cuda()
+    targets = targets.long().cuda()
+    
 
 
 # IO Benchmark
@@ -98,20 +128,7 @@ We can very clearly see that disk IO was the bottleneck in that case.
 ```
 git clone --recurse-submodules -j8 ...
 cd dataloader
-
-# Get dependencies
-# ================
-# CPU
-mkdir -p dependencies/torch-cpu
-cd dependencies/torch-cpu
-wget https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-latest.zip
-unzip libtorch-shared-with-deps-latest.zip
-
-# GPU
-mkdir -p dependencies/torch-gpu
-cd dependencies/torch-gpu
-wget https://download.pytorch.org/libtorch/cu90/libtorch-shared-with-deps-latest.zip
-unzip libtorch-shared-with-deps-latest.zip 
+./download_libtorch.sh
 
 # Build
 mkdir build
