@@ -39,7 +39,7 @@ loader = cpploader.Loader(
 
 
 model = torchvision.models.resnet18().to(device="cuda")
-optimizer = torch.optim.SGD(param_copy, lr = 0.01, momentum = 0.9);
+optimizer = torch.optim.SGD(model.parameters(), lr = 0.01, momentum = 0.9);
 
 
 print('Setup')
@@ -62,8 +62,8 @@ for i in range(0, args.count):
     io = time.time()
     b, t = loader.next()
 
-    inp = b.to_cuda()
-    target = t.to_cuda()
+    inp = b.float().cuda()
+    target = t.long().cuda()
 
     all_io += time.time() - io
 
