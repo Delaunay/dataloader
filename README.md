@@ -1,6 +1,17 @@
 Dataloader
 ==========
 
+# Fast JPEG loader even on hard drives
+
+On a standard hard drive:
+
+* Pytorch Default ImageFolder and Dataloader: 30.02 img / sec
+* cpploader ImageFolder                     : 105.67 img / sec
+* cpploader ZippedImageFolder               : 2023.00 img / sec
+
+Able to staturate the GPU with fresh data at all times!
+
+
 # Pytorch Extension
 
 ## Easy Install
@@ -35,7 +46,6 @@ Dataloader
     batch = batch.float().cuda()
     targets = targets.long().cuda()
     
-
 
 # IO Benchmark
 
