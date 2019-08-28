@@ -20,7 +20,7 @@ Able to staturate the GPU with fresh data at all times!
     python setup.py --user
 
 
-## Minimal Exampler
+## Minimal Example
 
     import cpploader
 
