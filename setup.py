@@ -31,7 +31,8 @@ setup(
             extra_compile_args=['-std=c++17'],
             libraries = [
                 'boost_filesystem',
-                'turbojpeg'
+                'turbojpeg',
+                'zip'
             ]
         )
     ],

@@ -1,8 +1,11 @@
-import sys
 import torch
+import torchvision
+
 import cpploader
+
 import argparse
 import time
+import sys
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--data', type=str)
@@ -16,10 +19,14 @@ args = parser.parse_args()
 
 print('Setting up Image Folder')
 print(args.data)
-folder = cpploader.Dataset('ImageFolder', args.data, True)
-sampler = cpploader.Sampler('RandomSampler', folder.size(), 0)
 
-print('Setting up  Loader')
+print('Creating dataset')
+folder = cpploader.Dataset('ImageFolder', args.data, True)
+
+print('Creating Sampler')
+sampler = cpploader.Sampler('RandomSampler', folder.size(), args.seed)
+
+print('Setting up Loader')
 loader = cpploader.Loader(
     folder,
     sampler,
@@ -30,23 +37,54 @@ loader = cpploader.Loader(
     args.mx_io
 )
 
+
+model = torchvision.models.resnet18().to(device="cuda")
+optimizer = torch.optim.SGD(param_copy, lr = 0.01, momentum = 0.9);
+
+
 print('Setup')
 for i in range(0, 10):
     b, t = loader.next()
     print(i, b.shape, t.shape, b.sum())
 
-all = 0 
+all = 0
+
 
 print('Iterate')
-s = time.time()
+
+all = time.time()
+all_io = 0
+all_compute = 0
+
 for i in range(0, args.count):
-    print('Starting', i)
+
+    # IO
+    io = time.time()
     b, t = loader.next()
-    print(b[0, 0, 0, 0])
 
-e = time.time()
+    inp = b.to_cuda()
+    target = t.to_cuda()
 
-print('Speed: {}'.format(args.batch_size * args.count / (e - s)))
+    all_io += time.time() - io
+
+    # Compute
+    compute = time.time()
+
+    optimizer.zero_grad()
+    out = model(inp)
+    loss = torch.nn.functional.cross_entropy(out, target)
+    value = loss.backward()
+
+    torch.cuda.synchronize()
+    all_compute += time.time() - compute
+
+all = time.time() - all
+
+
+print('        Speed: {}'.format(args.batch_size * args.count / all))
+print('     Speed IO: {}'.format(args.batch_size * args.count / all_io))
+print('Speed Compute: {}'.format(args.batch_size * args.count / all_compute))
+
 
 loader.report()
 loader.shutdown()
