@@ -9,7 +9,7 @@ Dataloader
     python setup.py --user
 
 
-## Minimal Exampler
+## Minimal Example
 
     import cpploader
 
