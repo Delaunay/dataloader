@@ -16,41 +16,44 @@ parser.add_argument('--mx-io', type=int, default=4)
 parser.add_argument('--buffering', type=int, default=4)
 parser.add_argument('--seed', type=int, default=0)
 parser.add_argument('--count', type=int, default=100)
-parser.add_argument('--zip', action='store_true', default=False)
 args = parser.parse_args()
 
 print('Setting up Image Folder')
 print(args.data)
 
-print('Creating dataset')
-backend = 'ImageFolder'
-if args.zip:
-    backend = 'ZippedImageFolder'
-
-folder = cpploader.Dataset(backend, args.data, True)
-
-print('Creating Sampler')
-sampler = cpploader.Sampler('RandomSampler', folder.size(), args.seed)
-
 print('Setting up Loader')
-loader = cpploader.Loader(
-    folder,
-    sampler,
-    args.batch_size,
-    args.threads,
-    args.buffering,
-    args.seed,
-    args.mx_io
+normalize = torchvision.transforms.Normalize(
+    mean=[0.485, 0.456, 0.406],
+    std=[0.229, 0.224, 0.225]
 )
 
+data_transforms = torchvision.transforms.Compose([
+    torchvision.transforms.RandomResizedCrop(224),
+    torchvision.transforms.RandomHorizontalFlip(),
+    torchvision.transforms.ToTensor(),
+    normalize
+])
+
+dataset = torchvision.datasets.ImageFolder(
+    args.data,
+    transform=data_transforms
+)
+
+dataloader = torch.utils.data.DataLoader(
+    dataset,
+    batch_size=args.batch_size,
+    shuffle=True,
+    num_workers=args.threads,
+    pin_memory=True
+)
+loader = iter(dataloader)
 
 model = torchvision.models.resnet18().to(device="cuda")
-optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9);
+optimizer = torch.optim.SGD(model.parameters(), lr = 0.01, momentum = 0.9);
 
-
-print('Setup')
+print('Setup', len(dataloader))
 for i in range(0, 14):
-    b, t = loader.next()
+    b, t = next(loader)
     print(i, b.shape, t.shape, b.sum())
 
 all = 0
@@ -66,7 +69,7 @@ for i in range(0, args.count):
 
     # IO
     io = time.time()
-    b, t = loader.next()
+    b, t = next(loader)
     all_io += time.time() - io
     
     inp = b.float().cuda()
@@ -91,8 +94,6 @@ print('      IO Wait: {}'.format(all_io / args.count))
 print('      Compute: {}'.format(all_compute / args.count))
 print('Compute Speed: {}'.format(args.batch_size * args.count / all_compute))
 
-loader.report()
-loader.shutdown()
 print('done')
 
 #sys.exit()

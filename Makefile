@@ -26,4 +26,12 @@ test_zip: compile_cpp
 test_zip2: compile_cpp
 	./build/bin/test_zip
 
+test_pytorch:
+	python examples/torch_loader.py --data /media/setepenre/UserData/tmp/train/ --batch-size 128 --threads 12 --count 24 --mx-io 8 --seed 1
+
+test_pytorch_cpp:
+	python examples/loader.py --data /media/setepenre/UserData/tmp/train/ --batch-size 128 --threads 12 --count 24 --mx-io 8 --seed 1
+
+test_pytorch_cpp_zip:
+	python examples/loader.py --data /media/setepenre/UserData/tmp/train.zip --batch-size 128 --threads 12 --count 24 --mx-io 8 --seed 1 --zip
 
