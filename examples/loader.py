@@ -62,11 +62,10 @@ for i in range(0, args.count):
     # IO
     io = time.time()
     b, t = loader.next()
-
+    all_io += time.time() - io
+    
     inp = b.float().cuda()
     target = t.long().cuda()
-
-    all_io += time.time() - io
 
     # Compute
     compute = time.time()
@@ -83,9 +82,9 @@ all = time.time() - all
 
 
 print('        Speed: {}'.format(args.batch_size * args.count / all))
-print('     Speed IO: {}'.format(args.batch_size * args.count / all_io))
-print('Speed Compute: {}'.format(args.batch_size * args.count / all_compute))
-
+print('      IO Wait: {}'.format(all_io / args.count))
+print('      Compute: {}'.format(all_compute / args.count))
+print('Compute Speed: {}'.format(args.batch_size * args.count / all_compute))
 
 loader.report()
 loader.shutdown()
