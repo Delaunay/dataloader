@@ -6,6 +6,7 @@ import cpploader
 import argparse
 import time
 import sys
+import os
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--data', type=str)
@@ -90,7 +91,9 @@ loader.report()
 loader.shutdown()
 print('done')
 
-sys.exit()
-
+#sys.exit()
+print('sys exit')
+os._exit(0)
+print('os exit')
 
 
