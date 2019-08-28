@@ -9,8 +9,8 @@
 // Used on the python side
 class PyTorchLoader{
 public:
-    PyTorchLoader(Dataset const& dataset, std::size_t batch_size_, std::size_t worker_cout = 6, std::size_t buffering_=1, int seed=0, std::size_t io=0):
-        loader(dataset, batch_size_, worker_cout, buffering_, seed, io)
+    PyTorchLoader(Dataset const& dataset, const Sampler& sampler, std::size_t batch_size_, std::size_t worker_cout = 6, std::size_t buffering_=1, int seed=0, std::size_t io=0):
+        loader(dataset, sampler, batch_size_, worker_cout, buffering_, seed, io)
     {}
 
     // return a NCHW ui8 tensor

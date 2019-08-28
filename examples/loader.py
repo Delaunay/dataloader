@@ -16,11 +16,13 @@ args = parser.parse_args()
 
 print('Setting up Image Folder')
 print(args.data)
-folder = cpploader.ImageFolder(args.data, True)
+folder = cpploader.Dataset('ImageFolder', args.data, True)
+sampler = cpploader.Sampler('RandomSampler', folder.size(), 0)
 
 print('Setting up  Loader')
 loader = cpploader.Loader(
     folder,
+    sampler,
     args.batch_size,
     args.threads,
     args.buffering,
