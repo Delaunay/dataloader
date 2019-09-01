@@ -5,6 +5,7 @@
 
 #include <mutex>
 #include <vector>
+#include <future>
 
 #include <zip.h>
 
@@ -45,8 +46,16 @@ public:
     ZipHandles(std::string const& file_name, int size=12):
         file_name(file_name)
     {
+        std::vector<std::future<bool>> results(size);
         for(int i = 0; i < size; ++i){
-             make_handle();
+             results[i] = std::async([this](){
+                 this->make_handle();
+                 return true;
+             });
+        }
+
+        for (auto& r: results){
+            r.wait();
         }
     }
 
@@ -73,11 +82,17 @@ public:
     }
 
     void make_handle(){
-        DLOG("Create a new zip handle %d", int(handles.size()));
         int error = 0;
+        // this is a slow call that should happen in parallel
         zip_t* data = zip_open(file_name.c_str(), ZIP_RDONLY, &error);
-        Item item{data, true, int(handles.size())};
-        handles.push_back(item);
+
+        // this is fast and should be sequential
+        {
+            std::lock_guard lock(mutex);
+            DLOG("Create a new zip handle %d", int(handles.size()));
+            Item item{data, true, int(handles.size())};
+            handles.push_back(item);
+        }
     }
 
     void free_handle(int idx){

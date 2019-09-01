@@ -35,3 +35,24 @@ test_pytorch_cpp:
 test_pytorch_cpp_zip:
 	python examples/loader.py --data /media/setepenre/UserData/tmp/train.zip --batch-size 128 --threads 12 --count 24 --mx-io 8 --seed 1 --zip
 
+
+test_hdd_sequential_zip:
+	./build/bin/io_benchmark -zip 1 --data /media/setepenre/UserData/tmp/train.zip -n 32 -b 256 -j 12 -io 6 --seq 1
+
+
+test_pytorch_nvme:
+	python examples/torch_loader.py --data /fast/train/ --batch-size 128 --threads 12 --count 24 --mx-io 8 --seed 1
+
+test_pytorch_cpp_nvme:
+	python examples/loader.py --data /fast/train/ --batch-size 128 --threads 12 --count 24 --mx-io 8 --seed 1
+
+test_pytorch_cpp_nvme_zip:
+	python examples/loader.py --data /fast/train.zip --batch-size 128 --threads 12 --count 24 --mx-io 8 --seed 1 --zip
+
+test_zip_nvme: compile_cpp
+	./build/bin/io_benchmark -zip 1 --data /fast/train.zip -n 32 -b 256 -j 12 -io 8
+
+test_cpp_nvme: compile_cpp
+	./build/bin/io_benchmark --data /fast/train/ -n 32 -b 256 -j 12 -io 8 --seed 12
+
+

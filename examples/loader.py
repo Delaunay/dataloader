@@ -17,6 +17,7 @@ parser.add_argument('--buffering', type=int, default=4)
 parser.add_argument('--seed', type=int, default=0)
 parser.add_argument('--count', type=int, default=100)
 parser.add_argument('--zip', action='store_true', default=False)
+parser.add_argument('--no-compute', action='store_true', default=False)
 args = parser.parse_args()
 
 print('Setting up Image Folder')
@@ -69,19 +70,20 @@ for i in range(0, args.count):
     b, t = loader.next()
     all_io += time.time() - io
     
-    inp = b.float().cuda()
-    target = t.long().cuda()
+    if not args.no_compute:
+        inp = b.float().cuda()
+        target = t.long().cuda()
 
-    # Compute
-    compute = time.time()
+        # Compute
+        compute = time.time()
 
-    optimizer.zero_grad()
-    out = model(inp)
-    loss = torch.nn.functional.cross_entropy(out, target)
-    value = loss.backward()
+        optimizer.zero_grad()
+        out = model(inp)
+        loss = torch.nn.functional.cross_entropy(out, target)
+        value = loss.backward()
 
-    torch.cuda.synchronize()
-    all_compute += time.time() - compute
+        torch.cuda.synchronize()
+        all_compute += time.time() - compute
 
 all = time.time() - all
 
