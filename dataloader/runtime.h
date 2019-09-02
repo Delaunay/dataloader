@@ -36,6 +36,12 @@ public:
     DEF_TIME_SIZE_PAIR(scaling)
     DEF_ADD_SIZE_PAIR_VAL(scaling)
 
+    DEF_TIME_SIZE_PAIR(reduce_img_wait)
+    DEF_ADD_SIZE_PAIR_VAL(reduce_img_wait)
+
+    DEF_TIME_SIZE_PAIR(reduce_img_cpy)
+    DEF_ADD_SIZE_PAIR_VAL(reduce_img_cpy)
+
 #undef DEF_TIME_SIZE_PAIR
 #undef DEF_ADD_SIZE_PAIR_VAL
 

@@ -90,8 +90,10 @@ all = time.time() - all
 
 print('        Speed: {}'.format(args.batch_size * args.count / all))
 print('      IO Wait: {}'.format(all_io / args.count))
-print('      Compute: {}'.format(all_compute / args.count))
-print('Compute Speed: {}'.format(args.batch_size * args.count / all_compute))
+
+if all_compute > 0:
+    print('      Compute: {}'.format(all_compute / args.count))
+    print('Compute Speed: {}'.format(args.batch_size * args.count / all_compute))
 
 loader.report()
 loader.shutdown()

@@ -115,11 +115,15 @@ std::tuple<std::vector<uint8_t>, std::vector<int>> DataLoader::get_future_batch(
                 break;
             }
         }
+        RuntimeStats::stat().insert_reduce_img_wait(wait_time, 1);
 
         if (is_ready(img_idx)){
-           memcpy(result.data() + i * image_size(), mem.data(), mem.size());
-           labels[i] = image_ready[img_idx];
-           i += 1;
+            TimeIt cpy;
+            memcpy(result.data() + i * image_size(), mem.data(), mem.size());
+            labels[i] = image_ready[img_idx];
+            i += 1;
+
+            RuntimeStats::stat().insert_reduce_img_cpy(cpy.stop(), 1);
         } else {
            ELOG(">> Skipping img %d waited too long (batch_size: %d)", img_idx, i);
         }

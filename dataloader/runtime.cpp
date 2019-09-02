@@ -28,6 +28,10 @@ void RuntimeStats::report(double loop, double thread_count, int max_io_thread){
 
 #undef REPORT
 
+    printf("5. Reduce %d batches\n", batch_count.load());
+    printf(" - %10.4f      sec\n", total_time_batch.load());
+    printf(" - %10.4f file/sec\n", batch_count.load() * batch_size / total_time_batch.load());
+
 
     printf("Total %d images\n", count_image);
     printf(" - %10.4f      sec | %10.4f      sec\n", total_time, loop);
