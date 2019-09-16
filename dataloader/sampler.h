@@ -1,5 +1,5 @@
 #ifndef DATALOADER_SAMPLER_HEADER_H
-#define DATALOADER_SAMPLERHEADER_H
+#define DATALOADER_SAMPLER_HEADER_H
 
 #include <random>
 #include <functional>

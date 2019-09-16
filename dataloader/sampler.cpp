@@ -19,7 +19,6 @@ Sampler::Sampler(std::string const& sampler, int size, int seed){
 }
 
 void RandomSampler::init_state(int size_, int seed){
-    seed             = 0;
     size             = std::max(size, size_);
 
     prng_engine   = std::mt19937{seed};

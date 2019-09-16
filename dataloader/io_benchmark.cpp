@@ -14,6 +14,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <coz.h>
+
 int main(int argc, const char* argv[]){
 
     int image_to_load = 32;
@@ -99,6 +101,7 @@ int main(int argc, const char* argv[]){
     for(int i = 0; i < image_to_load; ++i){
         auto batch = dataloader.get_next_item();
         std::cout << i << std::endl;
+        COZ_PROGRESS_NAMED("overall");
     }
 
     double loop = loop_time.stop();

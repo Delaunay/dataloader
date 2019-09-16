@@ -29,6 +29,7 @@ Image single_threaded_loader(const Bytes &data){
     // decode
     TimeIt decode_time;
     Image img = jpeg.decode();
+    COZ_PROGRESS_NAMED("image_decode");
 
     DLOG("done");
     RuntimeStats::stat().insert_decode(decode_time.stop(), img.size());
@@ -37,6 +38,7 @@ Image single_threaded_loader(const Bytes &data){
     // Scale
     TimeIt scale_time;
     img.inplace_scale(224, 224);
+    COZ_PROGRESS_NAMED("image_scale");
 
     DLOG("%s - %d", "Scaled", int(img(112, 112)));
 

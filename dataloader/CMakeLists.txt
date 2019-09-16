@@ -114,11 +114,16 @@ ENDIF(BUILD_PYTHON_MODULE)
 
 macro(torch_executable name)
     ADD_EXECUTABLE(${name} ${name}.cpp torchloader.cpp torchloader.h dataset.cpp sampler.cpp)
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+        target_compile_options(${name} INTERFACE -fsized-deallocation)
+    endif()
+
     TARGET_LINK_LIBRARIES(${name} ${TORCH_LIBRARIES} ${FILESYSTEM_LIB} ${TurboJPEG_LIBRARIES} dataloader zip dl)
     SET_PROPERTY(TARGET ${name} PROPERTY CXX_STANDARD 17)
+
 endmacro(torch_executable)
 
-torch_executable(test_jit)
+# torch_executable(test_jit)
 
 #ADD_EXECUTABLE(test_jit test_jit.cpp torchloader.cpp)
 #TARGET_LINK_LIBRARIES(test_jit

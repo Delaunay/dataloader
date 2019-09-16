@@ -158,7 +158,7 @@ void ZippedImageFolder::find_all_images(){
 
         // this is a file not a folder
         if (stat.size > 0){
-            _images.push_back({stat.name, stat.index, int(class_index), int(stat.size)});
+            _images.push_back({stat.name, static_cast<int>(stat.index), int(class_index), static_cast<size_t>(stat.size)});
         }
 
     }

@@ -59,6 +59,7 @@ test_cpp_nvme: compile_cpp
 coz_test: compile_cpp
 	coz run --- ./build/bin/io_benchmark --data /fast/train/ -n 32 -b 256 -j 12 -io 8 --seed 12
 
-
+coz_test10: compile_cpp
+	for n in {1..30}; do coz run --- ./build/bin/io_benchmark --data /fast/train/ -n 32 -b 256 -j 12 -io 8 --seed $n; done
 
 
