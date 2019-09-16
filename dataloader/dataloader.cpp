@@ -4,6 +4,8 @@
 #include <iostream>
 #include <thread>
 
+#include <coz.h>
+
 DataLoader::DataLoader(const Dataset& dataset, const Sampler& sampler,
                        int batch_size_, Transform trans, int worker_cout,
                        int buffering_, int seed, int io):
@@ -131,12 +133,16 @@ std::tuple<std::vector<uint8_t>, std::vector<int>> DataLoader::get_future_batch(
         img_offset = (img_offset + 1) % batch_size;
         DLOG("> Mark empty (id: %d)", img_idx);
         mark_empty(img_idx);
+        COZ_PROGRESS_NAMED("cpy_image");
+        COZ_PROGRESS;
     }
 
     retrieve_batch = (retrieve_batch + 1) % buffering;
     RuntimeStats::stat().insert_batch(batch_time.stop(), batch_size);
 
+    COZ_PROGRESS_NAMED("reduce_to_batch");
     DLOG("< Batch Ready (retrieve_batch_id: %d) (%d)", retrieve_batch);
+    COZ_PROGRESS;
     return std::make_tuple(result, labels);
 }
 

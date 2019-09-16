@@ -5,6 +5,8 @@
 #include <cstdio>
 #include <cstring>
 
+#include <coz.h>
+
 #undef DLOG
 #define DLOG(...)
 
@@ -89,6 +91,7 @@ Image JpegImage::decode(int flag){
     tjDecompress2(_decompressor, _image.data(), _image.size(), buffer.data(), width(), 0, height(), TJPF_RGB, flag);
 
     DLOG("decoded");
+    COZ_PROGRESS_NAMED("decode")
     return Image(buffer, width(), height());
 }
 

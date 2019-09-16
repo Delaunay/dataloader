@@ -8,6 +8,9 @@
 
 #undef DLOG
 #define DLOG(...)
+#include <coz.h>
+
+
 
 Image single_threaded_loader(const Bytes &data){
     DLOG("Starting task");
@@ -40,5 +43,6 @@ Image single_threaded_loader(const Bytes &data){
     RuntimeStats::stat().insert_scaling(scale_time.stop(), img.size());
     RuntimeStats::stat().increment_count();
 
+    COZ_PROGRESS_NAMED("image_loader");
     return img;
 }

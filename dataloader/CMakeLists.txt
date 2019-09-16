@@ -51,13 +51,13 @@ set(FILESYSTEM_LIB
 
 macro(library name)
     ADD_LIBRARY(${name} ${DATALOADER_HDS} ${DATALOADER_SRC})
-    TARGET_LINK_LIBRARIES(${name} ${FILESYSTEM_LIB} ${TurboJPEG_LIBRARIES} zip)
+    TARGET_LINK_LIBRARIES(${name} ${FILESYSTEM_LIB} ${TurboJPEG_LIBRARIES} zip dl)
     SET_PROPERTY(TARGET ${name} PROPERTY CXX_STANDARD 17)
 endmacro(library)
 
 macro(executable name)
     ADD_EXECUTABLE(${name} ${name}.cpp)
-    TARGET_LINK_LIBRARIES(${name} ${FILESYSTEM_LIB} ${TurboJPEG_LIBRARIES} dataloader zip)
+    TARGET_LINK_LIBRARIES(${name} ${FILESYSTEM_LIB} ${TurboJPEG_LIBRARIES} dataloader zip dl)
     SET_PROPERTY(TARGET ${name} PROPERTY CXX_STANDARD 17)
 endmacro(executable)
 
@@ -99,6 +99,7 @@ IF (BUILD_PYTHON_MODULE)
         # numpy stuff
         torch_python
         c10
+        dl
     )
     SET_PROPERTY(TARGET cpploader PROPERTY CXX_STANDARD 17)
     SET_PROPERTY(TARGET cpploader PROPERTY PREFIX "${PYTHON_MODULE_PREFIX}")
@@ -113,7 +114,7 @@ ENDIF(BUILD_PYTHON_MODULE)
 
 macro(torch_executable name)
     ADD_EXECUTABLE(${name} ${name}.cpp torchloader.cpp torchloader.h dataset.cpp sampler.cpp)
-    TARGET_LINK_LIBRARIES(${name} ${TORCH_LIBRARIES} ${FILESYSTEM_LIB} ${TurboJPEG_LIBRARIES} dataloader zip)
+    TARGET_LINK_LIBRARIES(${name} ${TORCH_LIBRARIES} ${FILESYSTEM_LIB} ${TurboJPEG_LIBRARIES} dataloader zip dl)
     SET_PROPERTY(TARGET ${name} PROPERTY CXX_STANDARD 17)
 endmacro(torch_executable)
 

@@ -3,6 +3,8 @@
 #include <cmath>
 #include <cstdio>
 
+#include <coz.h>
+
 // Simple proportional scaling
 Image& Image::inplace_scale(int nw, int nh){
     std::vector<unsigned char> buffer(std::size_t(nw * nh * 3));
@@ -26,6 +28,8 @@ Image& Image::inplace_scale(int nw, int nh){
     _width = nw;
     _height = nh;
     _image = buffer;
+
+    COZ_PROGRESS_NAMED("scaling");
     return *this;
 }
 

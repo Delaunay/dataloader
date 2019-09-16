@@ -11,6 +11,7 @@
 #define DLOG(...)
 #define DEBUG_PRINT(X)
 
+#include <coz.h>
 
 ImageFolder::ImageFolder(std::string const& folder_name, bool verbose):
     folder(folder_name)
@@ -86,6 +87,8 @@ Bytes ImageFolder::load_file(std::string const& file_name, std::size_t file_size
 
     assert(read_size == file_size && "read_size != file_size");
     fclose(file);
+
+    COZ_PROGRESS_NAMED("load_file");
     return buffer;
 }
 
@@ -186,6 +189,7 @@ Dict<std::string, int> const& ZippedImageFolder::classes_to_label() const {
 //! load a file from a zipped archive
 Bytes ZippedImageFolder::load_file(int i, std::size_t file_size) const {
     DLOG("%s", "Waiting for IO resource");
+
     Bytes buffer(file_size);
     TimeIt handle_reserve;
     auto handle = _handles.get_zip();
@@ -212,6 +216,8 @@ Bytes ZippedImageFolder::load_file(int i, std::size_t file_size) const {
 
     assert(read_size == file_size && "read_size != file_size");
     zip_fclose(file_h);
+
+    COZ_PROGRESS_NAMED("load_file_zip");
     return buffer;
 }
 // -----------------------------------------------------------------------
