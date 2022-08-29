@@ -5,42 +5,44 @@
 
 #include <cassert>
 #include <vector>
-#include <turbojpeg.h>
 
 #undef DLOG
 #define DLOG(...)
 
-class Image{
+class Image
+{
 public:
-    Image(std::vector<unsigned char> const& img, int w, int h):
-        _image(img), _width(w), _height(h)
+    Image(std::vector<unsigned char> const &img, int w, int h) : _image(img), _width(w), _height(h)
     {
         DLOG("Init from buffer (%d x %d)", w, h);
     }
 
-    int width()  const { return _width; }
+    int width() const { return _width; }
     int height() const { return _height; }
-    int size()   const {
+    int size() const
+    {
         assert(_width > 0 && _height > 0);
         assert(_width * _height * 3 == _image.size());
         return int(_image.size());
     }
 
-    Image(Image const& img):
-        _image(img._image), _width(img.width()), _height(img.height())
-    {}
+    Image(Image const &img) : _image(img._image), _width(img.width()), _height(img.height())
+    {
+    }
 
-    Image& inplace_scale(int nw, int nh);
+    Image &inplace_scale(int nw, int nh);
 
-    void save_ppm(const char* name);
+    void save_ppm(const char *name);
 
-    void save_jpeg(const char* name, int flag = TJFLAG_FASTDCT);
+    void save_jpeg(const char *name, int flag = TJFLAG_FASTDCT);
 
-    unsigned char const * data() const {
+    unsigned char const *data() const
+    {
         return _image.data();
     }
 
-    unsigned char operator() (int x, int y) const{
+    unsigned char operator()(int x, int y) const
+    {
         return _image[x * _width + y];
     }
 
